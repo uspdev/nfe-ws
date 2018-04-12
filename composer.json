@@ -1,0 +1,7 @@
+{
+    "require": {
+        "mikecao/flight": "^1.3",
+        "nfephp-org/sped-nfe": "^5.0",
+        "nfephp-org/sped-da": "^0.1.9"
+    }
+}
