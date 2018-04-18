@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d35c46edde60b49077b1662bb498fac3",
+    "content-hash": "beb49d7b499e06056a62e800d745dd33",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -844,6 +844,46 @@
             "time": "2016-10-10T12:19:37+00:00"
         },
         {
+            "name": "raelgc/template",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/raelgc/template.git",
+                "reference": "82adee0f1bb26b17fec1dec169d69cae7f906992"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/raelgc/template/zipball/82adee0f1bb26b17fec1dec169d69cae7f906992",
+                "reference": "82adee0f1bb26b17fec1dec169d69cae7f906992",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "raelgc\\": "raelgc"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-2.1-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Rael Gugelmin Cunha",
+                    "email": "rael.gc@gmail.com"
+                }
+            ],
+            "description": "PHP Template",
+            "homepage": "http://raelcunha.com/template/",
+            "keywords": [
+                "template"
+            ],
+            "time": "2018-03-05 10:57:35"
+        },
+        {
             "name": "symfony/inflector",
             "version": "v3.4.8",
             "source": {
@@ -1383,8 +1423,10 @@
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "raelgc/template": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

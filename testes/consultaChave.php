@@ -44,13 +44,16 @@ $tools = new Tools($configJson, Certificate::readPfx($content, 'masaki2008'));
 
 use NFePHP\Common\Signer;
 
-Signer::isSigned($nfe);
+if (Signer::isSigned($nfe)){
+    $signed = true;
+}
+    ;
 $dom = new \DOMDocument('1.0', 'utf-8');
 $dom->formatOutput = false;
 $dom->preserveWhiteSpace = false;
 $dom->loadXML($nfe);
 //verifica a validade no webservice da SEFAZ
-$tpAmb = $dom->getElementsByTagName('tpAmb')->item(0)->nodeValue;
+$tpAmb = $dom->getElementsByTagName('tpAmb')->item(0)->nodeValue;  // 1 é produção
 echo 'ambiente: ' . $tpAmb . PHP_EOL;
 $infNFe = $dom->getElementsByTagName('infNFe')->item(0);
 //echo $infNFe.PHP_EOL;
