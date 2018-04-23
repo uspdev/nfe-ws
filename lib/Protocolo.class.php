@@ -12,7 +12,9 @@ class Protocolo extends Common
 
     function __construct($cfg = array())
     {
-        $this->local = $cfg['local'];
+        $this->c = new Config();
+        $this->local = $this->c->local;
+        //echo $this->local;exit;
         $arr = [
             "atualizacao" => "2016-11-03 18:01:21",
             "tpAmb" => 1,

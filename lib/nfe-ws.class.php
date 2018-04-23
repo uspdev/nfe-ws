@@ -19,7 +19,12 @@ class nfe_ws extends Common
 
     function __construct($cfg = array())
     {
-        $this->local = $cfg['local'];
+
+        $this->c = new Config();
+        $this->local = $this->c->local;
+        //echo $this->local;exit;
+
+        //$this->local = $cfg['local'];
         $arr = [
             "atualizacao" => "2016-11-03 18:01:21",
             "tpAmb" => 1,
@@ -99,7 +104,6 @@ class nfe_ws extends Common
 
 
         $nfeArq = $this->local . $this->retornaChave() . '-nfe.xml'; // nome e caminho do arquivo xml
-
         if (!file_exists($nfeArq)) {
             file_put_contents($nfeArq, $this->xml);
         }
@@ -124,6 +128,7 @@ class nfe_ws extends Common
 
         $res['age'] = Tools::msgTempo(time(), filemtime($danfeArq));
         $res['file'] = $danfeArq;
+        $res['url'] = $this->c->baseUrl . 'api/danfe/' . $chave . '-danfe.pdf';
         $res['status'] = 'ok';
         return $res;
     }
@@ -198,9 +203,11 @@ class nfe_ws extends Common
         $debug = false;
         include_once 'functions.php';
 
-        $arq_xml = $this->local . $this->chNFe . '-nfe.xml';
-        $arq_proto_pdf = $this->local . $this->chNFe . '-prot.pdf';
-        $arq_proto = $this->local . $this->chNFe . '-prot.xml';
+        $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
+        $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
+        $arq_proto_url = $this->c->baseUrl .'api/sefaz/'. $this->chNFe . '-prot.pdf';
+
+        $arq_proto = $this->c->local . $this->chNFe . '-prot.xml';
 
         $system = 'Sistema DELOS NFe - http://delos.eesc.usp.br/nfe';
         $script = 'Protocolo.pdf versão 1.1.0 de 11/05/2015.';
@@ -407,7 +414,10 @@ class nfe_ws extends Common
         $pdf->Image(__DIR__ . '/logo_usp.png', 210 - 45, 297 - 14, 25);
 
         $pdf->Output($arq_proto_pdf, 'F');
-        return $arq_proto_pdf;
+        $ret['file'] = $arq_proto_pdf;
+        $ret['url'] = $arq_proto_url;
+
+        return $ret;
 
 
     }
