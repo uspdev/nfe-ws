@@ -70,7 +70,7 @@ class Protocolo extends Common
 
         $this->protArq = $this->local . $this->chNFe . '-prot.xml';
         $ret = [];
-        $age = 0;
+        $age = $maxage+1;
         if (is_file($this->protArq)) {
             $this->prot = file_get_contents($this->protArq);
             $age = time() - filemtime($this->protArq);
