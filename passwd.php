@@ -19,12 +19,13 @@ if ($argc < 2) {
     echo "php passwd.php del username\n";
     exit();
 }
-
+$c = new Config();
 function getcfg()
 {
-    global $local;
-    if (is_file($local.'/passwd.txt')) {
-        return unserialize(file_get_contents($local.'passwd.txt'));
+    global $c;
+
+    if (is_file($c->pwdFile)) {
+        return unserialize(file_get_contents($c->pwdFile));
     } else {
         return array();
     }
@@ -50,7 +51,7 @@ if ($argv[1] == 'add') {
 
     $cfg = getcfg();
     $cfg[$usr] = md5($pwd);
-    file_put_contents($local.'passwd.txt', serialize($cfg));
+    file_put_contents($c->pwdFile, serialize($cfg));
     echo "Usuário registrado com sucesso!\n";
     exit();
 }
