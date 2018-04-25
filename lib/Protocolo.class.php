@@ -9,6 +9,7 @@ class Protocolo extends Common
     // chave da nfe
     public $chNFe;
     protected $prot;
+    protected $c;
 
     function __construct($cfg = array())
     {
@@ -61,16 +62,23 @@ class Protocolo extends Common
  */
     public function consulta($chave)
     {
-        if (!$this->chNFe = Tools::validaChNFe($chave)) {
+        $maxage = 360; // caso tenha mais de 10 mins, consulta de nvo a sefaz.
+
+        if (!$this->chNFe = nfe_ws::validaChNFe($chave)) {
             return false;
         }
 
         $this->protArq = $this->local . $this->chNFe . '-prot.xml';
         $ret = [];
+        $age = 0;
         if (is_file($this->protArq)) {
             $this->prot = file_get_contents($this->protArq);
+            $age = time() - filemtime($this->protArq);
             $ret['age'] = Tools::msgTempo(time(), filemtime($this->protArq));
-        } else {
+        }
+
+        // se o protocolo for antigo ou se não exixtir
+        if ($age > $maxage) {
             $this->prot = $this->tools->sefazConsultaChave($chave);
             file_put_contents($this->protArq, $this->prot);
             $ret['age'] = 0;

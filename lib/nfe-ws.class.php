@@ -22,9 +22,7 @@ class nfe_ws extends Common
 
         $this->c = new Config();
         $this->local = $this->c->local;
-        //echo $this->local;exit;
 
-        //$this->local = $cfg['local'];
         $arr = [
             "atualizacao" => "2016-11-03 18:01:21",
             "tpAmb" => 1,
@@ -46,9 +44,9 @@ class nfe_ws extends Common
         //monta o config.json
         $configJson = json_encode($arr);
         //carrega o conteudo do certificado.
-        $cert = file_get_contents($cfg['cert_file']);
+        $cert = file_get_contents($this->c->certFile);
 
-        $this->tools = new Tools($configJson, Certificate::readPfx($cert, $cfg['cert_pwd']));
+        $this->tools = new Tools($configJson, Certificate::readPfx($cert, $this->c->certPwd));
     }
 
     /*
@@ -191,10 +189,16 @@ class nfe_ws extends Common
         return $this->chNFe;
     }
 
-
-    public function dadosParaProtocolo()
+    /*
+     * necessário validar quando recebe a chave do usuário
+     * a chave é somente números com 44 digitos
+     */
+    public static function validaChNFe($chNFe)
     {
-
+        if (preg_match("/^[0-9]{44}$/", str_replace(' ', '', $chNFe)) != 1) {
+            return false;
+        }
+        return $chNFe;
     }
 
     public function geraProtocolo()
@@ -205,7 +209,7 @@ class nfe_ws extends Common
 
         $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
         $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
-        $arq_proto_url = $this->c->baseUrl .'api/sefaz/'. $this->chNFe . '-prot.pdf';
+        $arq_proto_url = $this->c->baseUrl . 'api/sefaz/' . $this->chNFe . '-prot.pdf';
 
         $arq_proto = $this->c->local . $this->chNFe . '-prot.xml';
 

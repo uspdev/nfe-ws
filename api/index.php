@@ -16,22 +16,14 @@ Flight::route('GET /', function () {
 });
 
 Flight::route('*', function () {
-    global $data, $local;
-    /*    if (!preg_match('/^[0-9]{1,}$\.(pdf)/', $file)) {
-            header('HTTP/1.0 404 Not Found');
-            echo 'nada';
-            exit;
-        }*/
+
     $c = new Config;
-
-
 
     if (!isset($_SERVER['PHP_AUTH_USER'])) {
 
         header('WWW-Authenticate: Basic realm="use this hash key to encode"');
         header('HTTP/1.0 401 Unauthorized');
         echo 'Cancel button clicked. Not logged in!';
-        //print_r($_SERVER);
         exit;
     } else {
         if (!is_file($c->pwdFile)) {
@@ -61,12 +53,9 @@ Flight::route('*', function () {
 
 Flight::route('GET /danfe/@file', function ($file) {
 
+    $c = new Config();
+    $arq = $c->local . $file;
 
-    global $local;
-    $arq = $local . $file;
-
-    //global $data;
-    //$arq = $data . '/danfe/' . $file;
     // tem de verificar o nome do arquivo, somente numeros.pdf
     //echo 'Aqui envia o arquivo pdf da danfe em: ' . $file;
     if (is_file($arq)) {
@@ -81,10 +70,12 @@ Flight::route('GET /danfe/@file', function ($file) {
 
 });
 
-Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
+
+// está desativado??
+/*Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
     global $cfg;
 
-    $nfe = new nfe_ws($cfg);
+    $nfe = new nfe_ws();
     if (!$nfe->validaChave($chave)) {
         $ret['status'] = 'chave inválida';
         echo json_encode($ret);
@@ -93,15 +84,14 @@ Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
     $pdf = $nfe->geraProtocolo($chave);
     echo 'ok';
 
-});
+});*/
 
 Flight::route('GET /sefaz/@arq', function ($file) {
 
     global $local;
-    $arq = $local . $file;
+    $c = new Config();
+    $arq = $c->local . $file;
 
-
-    //$nfe = new nfe_ws($cfg);
 
     /*if (substr($file, 0, 5) == 'Sefaz') {
         $chave = substr($file, 5, -4); // poderia verificar se a chave é numero
@@ -109,8 +99,10 @@ Flight::route('GET /sefaz/@arq', function ($file) {
     //geraProtocolo($chave);
 
 
-
     // aqui tem de verificar se o protocolo da sefaz é antigo, se for tem de gerar outro
+    // o protocolo antigo é atualizado na consulta ao protocolo.
+    // o delos sempre consulta antes de pedir o relatorio então tudo bem.
+    // para verificar o idela é que seja passado a chave.
 
     if (is_file($arq)) {
         header('Content-Type: application/pdf; charset=utf-8');
@@ -124,8 +116,9 @@ Flight::route('GET /sefaz/@arq', function ($file) {
 });
 
 Flight::route('GET /xml/@arq', function ($file) {
-    global $data;
-    $arq = $data . '/xml/' . $file;
+    $c = new Config();
+    $arq = $c->local . $file;
+
     if (is_file($arq)) {
         header('Content-Type: application/xml; charset=utf-8');
         header("Content-Disposition:attachment;filename=$file");
@@ -156,7 +149,7 @@ Flight::route('POST /xml', function () {
     // se vier somente a chave
     if ($_POST['chave'] != '') {
         $prot = new Protocolo($cfg);
-        if (!$chave = Tools::validaChNFe($_POST['chave'])) {
+        if (!$chave = nfe_ws::validaChNFe($_POST['chave'])) {
             $res['status'] = 'Chave incorreta ' . strlen($_POST['chave']);
             echo json_encode($res);
             exit();
@@ -174,12 +167,12 @@ Flight::route('POST /xml', function () {
         $prot = new Protocolo($cfg);
 
         $nfe_xml = $_POST['xml'];
-/*
-        $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
-        if ($res['xml']['status'] != 'ok') {
-            echo json_encode($res);
-            exit;
-        };*/
+        /*
+                $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
+                if ($res['xml']['status'] != 'ok') {
+                    echo json_encode($res);
+                    exit;
+                };*/
 
         $nfe->import($nfe_xml);
         $res['chave'] = $nfe->retornaChave();

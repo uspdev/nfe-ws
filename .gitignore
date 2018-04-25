@@ -1,4 +1,9 @@
+
+local/
+testes/
 vendor/
+config.php
+
 node_modules/
 npm-debug.log
 

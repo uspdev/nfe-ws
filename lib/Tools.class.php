@@ -101,17 +101,7 @@ class Storage
 class Tools
 {
 
-    /*
-     * necessário validar quando recebe a chave do usuário
-     * a chave é somente números com 44 digitos
-     */
-    public static function validaChNFe($chNFe)
-    {
-        if (preg_match("/^[0-9]{44}$/", str_replace(' ', '', $chNFe)) != 1) {
-            return false;
-        }
-        return $chNFe;
-    }
+
 
     public static function Dom2Array($root)
     {
