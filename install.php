@@ -1,5 +1,11 @@
 <?php
 
+/*
+ apt install php-curl php-dom php-json php-gd php-mbstring php-mcrypt php-soap php-xml php-zip
+ *
+ *
+ */
+
 if (php_sapi_name() != 'cli') {
     echo "Nao esta em linha de comando!";
     exit();
