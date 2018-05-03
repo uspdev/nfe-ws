@@ -11,7 +11,7 @@ GET -> api/danfe/nome_do_arquivo.pdf<br>
 GET -> api/sefaz/nome_do_arquivo.pdf<br>
 GET -> api/xml/nome_do_arquivo.xml<br><br>
 
-<div>Veja <a href="../app/">aqui </a> o app de demonstração.</div>
+
 <br><br>
 <div>
     ---------------------<br>

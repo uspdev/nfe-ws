@@ -1,7 +1,5 @@
 <?php
 
-use NFePHP\Common\Certificate;
-//use NFePHP\NFe\Common\Complements;
 use NFePHP\Common\Signer;
 use NFePHP\DA\Legacy\Common;
 
@@ -17,36 +15,10 @@ class nfe_ws extends Common
     protected $chNFe;
     public $prot;
 
-    function __construct($cfg = array())
+    function __construct()
     {
-
         $this->c = new Config();
         $this->local = $this->c->local;
-
-        $arr = [
-            "atualizacao" => "2016-11-03 18:01:21",
-            "tpAmb" => 1,
-            "razaosocial" => "Escola de Engenharia de São Carlos",
-            "cnpj" => "63025530002824",
-            "siglaUF" => "SP",
-            "schemes" => "PL008i2",
-            "versao" => '3.10',
-            "tokenIBPT" => "AAAAAAA",
-            "CSC" => "GPB0JBWLUR6HWFTVEAS6RJ69GPCROFPBBB8G",
-            "CSCid" => "000001",
-            "proxyConf" => [
-                "proxyIp" => "",
-                "proxyPort" => "",
-                "proxyUser" => "",
-                "proxyPass" => ""
-            ]
-        ];
-        //monta o config.json
-        $configJson = json_encode($arr);
-        //carrega o conteudo do certificado.
-        $cert = file_get_contents($this->c->certFile);
-
-        $this->tools = new Tools($configJson, Certificate::readPfx($cert, $this->c->certPwd));
     }
 
     /*
@@ -86,26 +58,23 @@ class nfe_ws extends Common
             $this->infAdic = $this->dom->getElementsByTagName("infAdic")->item(0);
             $this->compra = $this->dom->getElementsByTagName("compra")->item(0);
 
-            //$this->tpEmis = $this->ide->getElementsByTagName("tpEmis")->item(0)->nodeValue;
-            //echo 'ok';exit;
-            //$this->tpImp = $this->ide->getElementsByTagName("tpImp")->item(0)->nodeValue;
 
-            //$this->infProt = $this->dom->getElementsByTagName("infProt")->item(0);
-
-
-            //valida se o XML é uma NF-e modelo 55, pois não pode ser 65 (NFC-e)
+            //verifica se o XML é uma NF-e modelo 55, pois não pode ser 65 (NFC-e)
             if ($this->pSimpleGetValue($this->ide, "mod") != '55') {
-                throw new InvalidArgumentException("O xml do DANFE deve ser uma NF-e modelo 55");
+                $res['NFe'] = 'Não é NFe modelo 55.';
+                $res['status'] = 'Erro';
+                return $res;
             }
-
         }
-
 
         $nfeArq = $this->local . $this->retornaChave() . '-nfe.xml'; // nome e caminho do arquivo xml
         if (!file_exists($nfeArq)) {
             file_put_contents($nfeArq, $this->xml);
         }
-        return true;
+        $res['url'] = $this->c->baseUrl . 'api/xml/' . $this->retornaChave() . '-nfe.xml';
+        $res['import'] = 'Importado com sucesso';
+        $res['status'] = 'ok';
+        return $res;
     }
 
     public function geraDanfe()
@@ -125,7 +94,7 @@ class nfe_ws extends Common
         }
 
         $res['age'] = Tools::msgTempo(time(), filemtime($danfeArq));
-        $res['file'] = $danfeArq;
+        //$res['file'] = $danfeArq;
         $res['url'] = $this->c->baseUrl . 'api/danfe/' . $chave . '-danfe.pdf';
         $res['status'] = 'ok';
         return $res;
@@ -176,7 +145,7 @@ class nfe_ws extends Common
             $res['status'] = false;
             return $res;
         }
-        $res['assinatura'] = 'Assinado';
+        $res['assinatura'] = 'Assinatuta confere';
 
         $res['status'] = 'ok';
 
@@ -201,21 +170,20 @@ class nfe_ws extends Common
         return $chNFe;
     }
 
-    public function geraProtocolo()
+    public function geraProtocolo($prot)
     {
 
+        $this->prot = $prot;
         $debug = false;
-        include_once 'functions.php';
 
         $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
         $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
         $arq_proto_url = $this->c->baseUrl . 'api/sefaz/' . $this->chNFe . '-prot.pdf';
 
-        $arq_proto = $this->c->local . $this->chNFe . '-prot.xml';
 
-        $system = 'Sistema DELOS NFe - http://delos.eesc.usp.br/nfe';
-        $script = 'Protocolo.pdf versão 1.1.0 de 11/05/2015.';
-        $msg_consulta = 'Esta consulta foi realizada pelo Sistema DELOS-NFe em ';
+        /*        $system = 'Sistema DELOS NFe - http://delos.eesc.usp.br/nfe';
+                $script = 'Protocolo.pdf versão 1.1.0 de 11/05/2015.';
+                $msg_consulta = 'Esta consulta foi realizada pelo Sistema DELOS-NFe em ';*/
 
         // -----------------------------------
         if ($debug) echo 'arq_xml = ' . $arq_xml;
@@ -227,9 +195,6 @@ class nfe_ws extends Common
             if ($debug) echo "Arquivo xml inexistente! Processo abortado.\n";
             return false;
         }
-
-        require_once('codigos_nfe.php');
-        require_once('SPDF.class.php');
 
         $tpl = new \raelgc\view\Template(__DIR__ . '/protocolo.tpl');
 
@@ -247,16 +212,16 @@ class nfe_ws extends Common
         $tpl->mod = $this->pSimpleGetValue($this->ide, 'mod');
 
         if ($tpl->versao > 3) { // versão 3.1 é de um jeito, versão 2.00 é de outro. Nao sei os intermediários
-            $tpl->dhEmi = date("d/m/Y - H:i:s", convertTime($this->ide->getElementsByTagName('dhEmi')->item(0)->nodeValue));
+            $tpl->dhEmi = date("d/m/Y - H:i:s", Tools::convertTime($this->ide->getElementsByTagName('dhEmi')->item(0)->nodeValue));
         } else {
-            $tpl->dhEmi = date("d/m/Y", convertTime($this->ide->getElementsByTagName('dEmi')->item(0)->nodeValue . 'T00:00:00'));
+            $tpl->dhEmi = date("d/m/Y", Tools::convertTime($this->ide->getElementsByTagName('dEmi')->item(0)->nodeValue . 'T00:00:00'));
         }
 
         // data e hora de saída pode não estar presente e pode ter formatos diferentes
         if ($tpl->versao > 3) {
             if ($this->ide->getElementsByTagName('dhSaiEnt')->item(0)) {
                 $tpl->dhSaiEnt = $this->ide->getElementsByTagName('dhSaiEnt')->item(0)->nodeValue;
-                $tpl->dhSaiEnt = date("d/m/Y H:i:s", convertTime($tpl->dhSaiEnt));
+                $tpl->dhSaiEnt = date("d/m/Y H:i:s", Tools::convertTime($tpl->dhSaiEnt));
             } else {
                 $tpl->dhSaiEnt = '';
             }
@@ -264,7 +229,7 @@ class nfe_ws extends Common
             if (!$tpl->dhSaiEnt = $this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue)
                 $tpl->dhSaiEnt = '';
             else
-                $tpl->dhSaiEnt = date("d/m/Y H:i:s", convertTime($tpl->dhSaiEnt . 'T00:00:00'));
+                $tpl->dhSaiEnt = date("d/m/Y H:i:s", Tools::convertTime($tpl->dhSaiEnt . 'T00:00:00'));
         }
 
         $tpl->indFinal = $this->ide->getElementsByTagName('indFinal')->item(0)->nodeValue;
@@ -332,8 +297,6 @@ class nfe_ws extends Common
         $tpl->indPag = $this->ide->getElementsByTagName('indPag')->item(0)->nodeValue;
         $tpl->indPag = $tpl->indPag . ' - ' . Storage::indPag($tpl->indPag);
 
-        // nao bateu com o consultado na sefaz de SP
-        // para NF 35180362640511000125550010000328311061546746
         $tpl->digestValue = $this->dom->getElementsByTagName('DigestValue')->item(0)->nodeValue;
 
 
@@ -342,13 +305,7 @@ class nfe_ws extends Common
             return false;
         }
 
-        $tpl->situacao = '';
-        if ($this->prot['cStat'] == 100) {
-            $tpl->situacao = 'APROVADA';
-        }
-        if ($this->prot['cStat'] == 101) {
-            $tpl->situacao = 'CANCELADA';
-        }
+        $tpl->situacao = mb_strtoupper(Storage::cStat($this->prot['cStat']), 'UTF-8');
 
         $tpl->tpAmb = mb_strtoupper(Storage::tpAmb($this->prot['tpAmb']), 'UTF-8');
 
@@ -363,9 +320,10 @@ class nfe_ws extends Common
         $tpl->infoSistema = 'Sistema DELOS/NFE';
 
         $html = $tpl->parse();
+        // Aqui termina a geração do HTML
 
-        //echo $html;
-
+        //Aqui começa a geração do PDF
+        // tcpdf é do vendor tecnickcom mas não usa namespaces
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('DELOS-NFE');
@@ -418,7 +376,7 @@ class nfe_ws extends Common
         $pdf->Image(__DIR__ . '/logo_usp.png', 210 - 45, 297 - 14, 25);
 
         $pdf->Output($arq_proto_pdf, 'F');
-        $ret['file'] = $arq_proto_pdf;
+        //$ret['file'] = $arq_proto_pdf;
         $ret['url'] = $arq_proto_url;
 
         return $ret;

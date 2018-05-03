@@ -21,6 +21,12 @@ function red($str)
     return "\033[0;31m" . $str . "\033[0;37m";
 }
 
+
+function composer()
+{
+    system('composer install');
+}
+
 function le_config()
 {
     global $config, $ok;
@@ -90,7 +96,11 @@ $ok = true;
 echo '* Configurador principal *' . PHP_EOL;
 
 echo "lendo arquivo de configuração: ";
-echo le_config() . "\n";
+le_config();
+
+
+echo 'Atualizando Composer' . PHP_EOL;
+composer();
 
 echo 'Verifica o htaccess da pasta API: ';
 echo verifica_htaccess() . "\n";

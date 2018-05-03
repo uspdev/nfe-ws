@@ -1,7 +1,9 @@
 <?php
 require_once '../config.php';
 require_once '../vendor/autoload.php';
+require_once '../lib/Config.class.php';
 require_once '../lib/Tools.class.php';
+require_once '../lib/Storage.class.php';
 require_once '../lib/Protocolo.class.php';
 require_once '../lib/nfe-ws.class.php';
 
@@ -19,16 +21,20 @@ Flight::route('*', function () {
 
     $c = new Config;
 
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST');
+
     if (!isset($_SERVER['PHP_AUTH_USER'])) {
 
         header('WWW-Authenticate: Basic realm="use this hash key to encode"');
         header('HTTP/1.0 401 Unauthorized');
-        echo 'Cancel button clicked. Not logged in!';
+        echo 'Você deve digitar um login e senha válidos para acessar este recurso\n';
         exit;
+
     } else {
         if (!is_file($c->pwdFile)) {
             //header('HTTP/1.0 401 Unauthorized');
-            echo 'Plz configure user before use!';
+            echo 'Este webservice ainda não foi configurado!';
             exit();
         }
         $usrs = unserialize(file_get_contents($c->pwdFile));
@@ -36,20 +42,31 @@ Flight::route('*', function () {
             header('HTTP/1.0 401 Unauthorized');
             exit();
         }
-        // aqui tem de verificar username e senha com
-        // $_SERVER['PHP_AUTH_USER'] e $_SERVER['PHP_AUTH_PW']
-        //echo "<p>Olá, {$_SERVER['PHP_AUTH_USER']}.</p>";
-        // echo "<p>Você digitou {$_SERVER['PHP_AUTH_PW']} como sua senha.</p>";
     }
-    // teste se a pasta data está ok
+
+    // testa se a pasta data está ok
     if (!is_dir($c->local)) {
         //header('HTTP/1.0 500 Internal Server Error');
-        echo 'Plz configure folder before use data!';
+        echo 'A pasta de dados não está configurada!';
         exit();
     }
 
     return true;
 });
+
+// está desativado??
+/*Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
+
+    $nfe = new nfe_ws();
+    if (!$nfe->validaChave($chave)) {
+        $ret['status'] = 'chave inválida';
+        echo json_encode($ret);
+        exit;
+    }
+    $pdf = $nfe->geraProtocolo($chave);
+    echo 'ok';
+
+});*/
 
 Flight::route('GET /danfe/@file', function ($file) {
 
@@ -67,42 +84,12 @@ Flight::route('GET /danfe/@file', function ($file) {
         echo 'Arquivo nao encontrado!';
         exit();
     }
-
 });
-
-
-// está desativado??
-/*Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
-    global $cfg;
-
-    $nfe = new nfe_ws();
-    if (!$nfe->validaChave($chave)) {
-        $ret['status'] = 'chave inválida';
-        echo json_encode($ret);
-        exit;
-    }
-    $pdf = $nfe->geraProtocolo($chave);
-    echo 'ok';
-
-});*/
 
 Flight::route('GET /sefaz/@arq', function ($file) {
 
-    global $local;
     $c = new Config();
     $arq = $c->local . $file;
-
-
-    /*if (substr($file, 0, 5) == 'Sefaz') {
-        $chave = substr($file, 5, -4); // poderia verificar se a chave é numero
-    }*/
-    //geraProtocolo($chave);
-
-
-    // aqui tem de verificar se o protocolo da sefaz é antigo, se for tem de gerar outro
-    // o protocolo antigo é atualizado na consulta ao protocolo.
-    // o delos sempre consulta antes de pedir o relatorio então tudo bem.
-    // para verificar o idela é que seja passado a chave.
 
     if (is_file($arq)) {
         header('Content-Type: application/pdf; charset=utf-8');
@@ -116,6 +103,7 @@ Flight::route('GET /sefaz/@arq', function ($file) {
 });
 
 Flight::route('GET /xml/@arq', function ($file) {
+
     $c = new Config();
     $arq = $c->local . $file;
 
@@ -130,10 +118,7 @@ Flight::route('GET /xml/@arq', function ($file) {
     }
 });
 
-// aqui está pronto
 Flight::route('POST /xml', function () {
-
-    global $cfg;
 
     $res = array(); // nao pode usar [] no php5.3 que está no delos
     $res['status'] = array();
@@ -148,7 +133,7 @@ Flight::route('POST /xml', function () {
 
     // se vier somente a chave
     if ($_POST['chave'] != '') {
-        $prot = new Protocolo($cfg);
+        $prot = new Protocolo();
         if (!$chave = nfe_ws::validaChNFe($_POST['chave'])) {
             $res['status'] = 'Chave incorreta ' . strlen($_POST['chave']);
             echo json_encode($res);
@@ -163,36 +148,42 @@ Flight::route('POST /xml', function () {
 
     // se vier o xml
     if ($_POST['xml'] != '') {
-        $nfe = new nfe_ws($cfg);
-        $prot = new Protocolo($cfg);
+        $nfe = new nfe_ws();
+        $prot = new Protocolo();
 
         $nfe_xml = $_POST['xml'];
-        /*
-                $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
-                if ($res['xml']['status'] != 'ok') {
-                    echo json_encode($res);
-                    exit;
-                };*/
 
-        $nfe->import($nfe_xml);
+        $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
+        if ($res['xml']['status'] != 'ok') {
+            echo json_encode($res);
+            exit;
+        };
+
+        $res['xml2'] = $nfe->import($nfe_xml);
+        if ($res['xml2']['status'] != 'ok') {
+            echo json_encode($res);
+            exit;
+        };
+        $res['url']['xml'] = $res['xml2']['url'];
+
         $res['chave'] = $nfe->retornaChave();
         $res['danfe'] = $nfe->geraDanfe();
 
-        $parts = pathinfo($res['danfe']['file']);
-
-        $arq = $parts['filename'] . '.' . $parts['extension'];
         $res['url']['danfe'] = $res['danfe']['url'];
 
-        $res['prot'] = $prot->consulta($res['chave']);
+        $prot = $prot->consulta($res['chave']);
 
         // gera o protocolo
-        $nfe->prot = $res['prot'];
+        $res['prot'] = $nfe->geraProtocolo($prot);
 
-        $prot = $nfe->geraProtocolo();
-        $res['prot']['file'] = $prot['file'];
+        // vamos mostrar algumas informações para o usuário
+        $res['prot']['age'] = $prot['age'];
+        $res['prot']['cStat'] = $prot['cStat'];
+        $res['prot']['xMotivo'] = $prot['xMotivo'];
+        $res['prot']['dhConsulta'] = $prot['dhConsulta'];
+        $res['prot']['tpAmb'] = $prot['tpAmb'];
 
-
-        $res['url']['sefaz'] = $prot['url'];
+        $res['url']['sefaz'] = $res['prot']['url'];
 
         $res['status'] = 'ok';
         echo json_encode($res);

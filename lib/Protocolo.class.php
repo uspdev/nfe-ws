@@ -11,11 +11,11 @@ class Protocolo extends Common
     protected $prot;
     protected $c;
 
-    function __construct($cfg = array())
+    function __construct()
     {
         $this->c = new Config();
         $this->local = $this->c->local;
-        //echo $this->local;exit;
+
         $arr = [
             "atualizacao" => "2016-11-03 18:01:21",
             "tpAmb" => 1,
@@ -23,23 +23,14 @@ class Protocolo extends Common
             "cnpj" => "63025530002824",
             "siglaUF" => "SP",
             "schemes" => "PL008i2",
-            "versao" => '3.10',
-            "tokenIBPT" => "AAAAAAA",
-            "CSC" => "GPB0JBWLUR6HWFTVEAS6RJ69GPCROFPBBB8G",
-            "CSCid" => "000001",
-            "proxyConf" => [
-                "proxyIp" => "",
-                "proxyPort" => "",
-                "proxyUser" => "",
-                "proxyPass" => ""
-            ]
+            "versao" => '3.10'
         ];
         //monta o config.json
         $configJson = json_encode($arr);
         //carrega o conteudo do certificado.
-        $cert = file_get_contents($cfg['cert_file']);
+        $cert = file_get_contents($this->c->certFile);
 
-        $this->tools = new NFePHP\NFe\Tools($configJson, Certificate::readPfx($cert, $cfg['cert_pwd']));
+        $this->tools = new NFePHP\NFe\Tools($configJson, Certificate::readPfx($cert, $this->c->certPwd));
     }
 
     public function getChave()
