@@ -11,6 +11,7 @@ if (php_sapi_name() !== 'cli') {
 }
 
 require 'config.php';
+require 'lib/Config.class.php';
 
 if ($argc < 2) {
     echo "Sintaxe:\n";
