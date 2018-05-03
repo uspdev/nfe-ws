@@ -1,8 +1,19 @@
 <?php
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: authorization');
-//phpinfo();exit;
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: authorization');
+
+if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+    echo 'OK';
+    exit;
+}
+if (!isset($_SERVER['PHP_AUTH_USER'])) {
+    header('HTTP/1.0 401 Unauthorized');
+    header('WWW-Authenticate: Basic realm="use this hash key to encode"');
+    echo 'Você deve digitar um login e senha válidos para acessar este recurso\n';
+    exit;
+}
+
 require_once '../config.php';
 require_once '../vendor/autoload.php';
 require_once '../lib/Config.class.php';
@@ -24,33 +35,16 @@ Flight::route('*', function () {
 
     $c = new Config;
 
-//    header('Access-Control-Allow-Origin: *');
-//    header('Access-Control-Allow-Methods: GET, POST');
-
-    if ( isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
-    echo 'OK';
-    exit;
+    if (!is_file($c->pwdFile)) {
+        //header('HTTP/1.0 401 Unauthorized');
+        echo 'Este webservice ainda não foi configurado!';
+        exit();
     }
-
-    if (!isset($_SERVER['PHP_AUTH_USER'])) {
-
+    $usrs = unserialize(file_get_contents($c->pwdFile));
+    if (!isset($usrs[$_SERVER['PHP_AUTH_USER']]) or $usrs[$_SERVER['PHP_AUTH_USER']] != md5($_SERVER['PHP_AUTH_PW'])) {
         header('HTTP/1.0 401 Unauthorized');
-        header('WWW-Authenticate: Basic realm="use this hash key to encode"');
-        echo 'Você deve digitar um login e senha válidos para acessar este recurso\n';
-        exit;
-
-    } else {
-        if (!is_file($c->pwdFile)) {
-            //header('HTTP/1.0 401 Unauthorized');
-            echo 'Este webservice ainda não foi configurado!';
-            exit();
-        }
-        $usrs = unserialize(file_get_contents($c->pwdFile));
-        if (!isset($usrs[$_SERVER['PHP_AUTH_USER']]) or $usrs[$_SERVER['PHP_AUTH_USER']] != md5($_SERVER['PHP_AUTH_PW'])) {
-            header('HTTP/1.0 401 Unauthorized');
-            echo 'Credenciais inválidas';
-            exit();
-        }
+        echo 'Credenciais inválidas';
+        exit();
     }
 
     // testa se a pasta data está ok
