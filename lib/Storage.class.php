@@ -52,7 +52,8 @@ class Storage
         $finNFe = array(
             1 => 'NF-e normal',
             2 => 'NF-e complementar',
-            3 => 'NF-e de ajuste');
+            3 => 'NF-e de ajuste',
+            4 => 'Devolução de mercadorias');
         return $finNFe[$id];
     }
 
