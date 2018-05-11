@@ -181,6 +181,7 @@ Flight::route('POST /xml', function () {
         $res['url']['sefaz'] = $nfe->geraProtocolo($prot)['url'];
 
         // vamos mostrar algumas informações do protocolo para o usuário
+        $sefaz['age'] = $prot['age'];
         $sefaz['cStat'] = $prot['cStat'];
         $sefaz['xMotivo'] = $prot['xMotivo'];
         $sefaz['dhConsulta'] = $prot['dhConsulta'];

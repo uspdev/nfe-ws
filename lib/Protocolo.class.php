@@ -62,8 +62,8 @@ class Protocolo extends Common
 
         $arq = $this->local . $this->chNFe . '-prot.xml';
         $ret = [];
-        $age = time() - filemtime($arq);
 
+        $age = is_file($arq) ? time() - filemtime($arq) : 0;
 
         if (!is_file($arq) || $age > $maxage) {
             // se o arquivo não existir ou estiver velho
