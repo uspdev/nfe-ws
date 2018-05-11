@@ -170,20 +170,44 @@ class nfe_ws extends Common
         return $chNFe;
     }
 
+    /*
+     * Retorna detalhes da danfe para cadastrar no BD de NFEs
+     */
+    public function detalhes()
+    {
+        $ide['nro'] = $this->ide->getElementsByTagName('nNF')->item(0)->nodeValue;
+        $ide['serie'] = $this->ide->getElementsByTagName('serie')->item(0)->nodeValue;
+        $ide['dataemi'] = $this->getdhEmi();
+        $ide['total'] = str_replace('.', ',', $this->total->getElementsByTagName('vNF')->item(0)->nodeValue);
+        $ret['ide'] = $ide;
+
+        $emit['cnpj'] = $this->emit->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+        $emit['nome'] = $this->emit->getElementsByTagName('xNome')->item(0)->nodeValue;
+        $emit['mun'] = $this->emit->getElementsByTagName('xMun')->item(0)->nodeValue;
+        $emit['uf'] = $this->emit->getElementsByTagName('UF')->item(0)->nodeValue;
+        $ret['emit'] = $emit;
+
+        $dest['cnpj'] = $this->getDestCNPJ(false);
+        $dest['nome'] = $this->dest->getElementsByTagName('xNome')->item(0)->nodeValue;
+        $ret['dest'] = $dest;
+
+        $ret['infadic'] = $this->infAdic->getElementsByTagName('infCpl')->item(0)->nodeValue;
+
+        return $ret;
+    }
+
+    /*
+     * Combina informações do XML e do protocolo para gerar um documento
+     * similar ao da consulta de NFE na sefaz
+     */
     public function geraProtocolo($prot)
     {
-
         $this->prot = $prot;
         $debug = false;
 
         $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
         $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
         $arq_proto_url = $this->c->baseUrl . 'api/sefaz/' . $this->chNFe . '-prot.pdf';
-
-
-        /*        $system = 'Sistema DELOS NFe - http://delos.eesc.usp.br/nfe';
-                $script = 'Protocolo.pdf versão 1.1.0 de 11/05/2015.';
-                $msg_consulta = 'Esta consulta foi realizada pelo Sistema DELOS-NFe em ';*/
 
         // -----------------------------------
         if ($debug) echo 'arq_xml = ' . $arq_xml;
@@ -204,42 +228,31 @@ class nfe_ws extends Common
 
         $tpl->chNFe = $this->pFormat($this->chNFe, '##-####-##.###.###/####-##-##-###-###.###.###-###.###.###-#');
         $tpl->nNF = $this->ide->getElementsByTagName('nNF')->item(0)->nodeValue;
-        $tpl->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
+
+        $this->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
+        $tpl->versao = $this->versao;
 
         $tpl->serie = $this->ide->getElementsByTagName('serie')->item(0)->nodeValue;
 
         //$tpl->mod = $this->ide->getElementsByTagName('mod')->item(0)->nodeValue;
         $tpl->mod = $this->pSimpleGetValue($this->ide, 'mod');
 
-        if ($tpl->versao > 3) { // versão 3.1 é de um jeito, versão 2.00 é de outro. Nao sei os intermediários
-            $tpl->dhEmi = date("d/m/Y - H:i:s", Tools::convertTime($this->ide->getElementsByTagName('dhEmi')->item(0)->nodeValue));
-        } else {
-            $tpl->dhEmi = date("d/m/Y", Tools::convertTime($this->ide->getElementsByTagName('dEmi')->item(0)->nodeValue . 'T00:00:00'));
-        }
+        // versão 3.1 é de um jeito, versão 2.00 é de outro. Nao sei os intermediários
+        $tpl->dhEmi = $this->getdhEmi();
 
         // data e hora de saída pode não estar presente e pode ter formatos diferentes
-        if ($tpl->versao > 3) {
-            if ($this->ide->getElementsByTagName('dhSaiEnt')->item(0)) {
-                $tpl->dhSaiEnt = $this->ide->getElementsByTagName('dhSaiEnt')->item(0)->nodeValue;
-                $tpl->dhSaiEnt = date("d/m/Y H:i:s", Tools::convertTime($tpl->dhSaiEnt));
-            } else {
-                $tpl->dhSaiEnt = '';
-            }
-        } else {
-            if (!$tpl->dhSaiEnt = $this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue)
-                $tpl->dhSaiEnt = '';
-            else
-                $tpl->dhSaiEnt = date("d/m/Y H:i:s", Tools::convertTime($tpl->dhSaiEnt . 'T00:00:00'));
+        $tpl->dhSaiEnt = $this->getdhSaiEnt();
+
+        if ($this->versao > 3) {
+            $tpl->indFinal = $this->ide->getElementsByTagName('indFinal')->item(0)->nodeValue;
+            $tpl->indFinal = $tpl->indFinal . ' - ' . Storage::indFinal($tpl->indFinal);
+
+            $tpl->indPres = $this->ide->getElementsByTagName('indPres')->item(0)->nodeValue;
+            $tpl->indPres = $tpl->indPres . ' - ' . Storage::indPres($tpl->indPres);
+
+            $tpl->idDest = $this->ide->getElementsByTagName('idDest')->item(0)->nodeValue;
+            $tpl->idDest = $tpl->idDest . ' - ' . Storage::idDest($tpl->idDest);
         }
-
-        $tpl->indFinal = $this->ide->getElementsByTagName('indFinal')->item(0)->nodeValue;
-        $tpl->indFinal = $tpl->indFinal . ' - ' . Storage::indFinal($tpl->indFinal);
-
-        $tpl->indPres = $this->ide->getElementsByTagName('indPres')->item(0)->nodeValue;
-        $tpl->indPres = $tpl->indPres . ' - ' . Storage::indPres($tpl->indPres);
-
-        $tpl->idDest = $this->ide->getElementsByTagName('idDest')->item(0)->nodeValue;
-        $tpl->idDest = $tpl->idDest . ' - ' . Storage::idDest($tpl->idDest);
 
         $tpl->vNF = str_replace('.', ',', $this->total->getElementsByTagName('vNF')->item(0)->nodeValue);
 
@@ -261,17 +274,7 @@ class nfe_ws extends Common
         $tpl->emitUF = $this->emit->getElementsByTagName("UF")->item(0)->nodeValue;
 
         //Pegando valor do CPF/CNPJ detinatário
-        if (!empty($this->dest->getElementsByTagName("CNPJ")->item(0)->nodeValue)) {
-            $tmp = $this->dest->getElementsByTagName("CNPJ")->item(0)->nodeValue;
-            $tpl->destCNPJ = $this->pFormat($tmp, "###.###.###/####-##");
-        } else {
-            if (!empty($this->dest->getElementsByTagName("CPF")->item(0)->nodeValue)) {
-                $tmp = $this->dest->getElementsByTagName("CPF")->item(0)->nodeValue;
-                $tpl->destCNPJ = $this->pFormat($tmp, "###.###.###-##");
-            } else {
-                $tpl->destCNPJ = '';
-            }
-        }
+        $tpl->destCNPJ = $this->getDestCNPJ(true);
 
         $tpl->destNome = $this->dest->getElementsByTagName("xNome")->item(0)->nodeValue;
 
@@ -380,9 +383,55 @@ class nfe_ws extends Common
         $ret['url'] = $arq_proto_url;
 
         return $ret;
-
-
     }
 
+    protected function getdhSaiEnt()
+    {
+        // data e hora de saída pode não estar presente e pode ter formatos diferentes
+        if ($this->versao > 3) {
+            if ($this->ide->getElementsByTagName('dhSaiEnt')->item(0)) {
+                $dhSaiEnt = $this->ide->getElementsByTagName('dhSaiEnt')->item(0)->nodeValue;
+                return date("d/m/Y H:i:s", $this->pConvertTime($dhSaiEnt));
+            } else {
+                return '';
 
+            }
+        } else {
+            if (!$dhSaiEnt = $this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue) {
+                return '';
+            } else {
+                return date("d/m/Y H:i:s", $this->pConvertTime($dhSaiEnt));
+            }
+        }
+    }
+
+    protected function getdhEmi()
+    {
+        if ($this->versao > 3) {
+            return date("d/m/Y - H:i:s", $this->pConvertTime($this->ide->getElementsByTagName('dhEmi')->item(0)->nodeValue));
+        } else {
+            return date("d/m/Y", $this->pConvertTime($this->ide->getElementsByTagName('dEmi')->item(0)->nodeValue . 'T00:00:00'));
+        }
+    }
+
+    // naverdade pode ser o cnpj ou cpf, já formatados
+    protected function getDestCNPJ($formatado = true)
+    {
+        if (!empty($this->dest->getElementsByTagName("CNPJ")->item(0)->nodeValue)) {
+            $tmp = $this->dest->getElementsByTagName("CNPJ")->item(0)->nodeValue;
+            if ($formatado)
+                return $this->pFormat($tmp, "###.###.###/####-##");
+            else return $tmp;
+        } else {
+            if (!empty($this->dest->getElementsByTagName("CPF")->item(0)->nodeValue)) {
+                $tmp = $this->dest->getElementsByTagName("CPF")->item(0)->nodeValue;
+                if ($formatado)
+                    return $this->pFormat($tmp, "###.###.###-##");
+                else return $tmp;
+            } else {
+                return '';
+            }
+        }
+
+    }
 }

@@ -54,6 +54,7 @@ class Tools
         }
     }
 
+    // esta deprecado pois dá para usar o pConvertTime do comon
     public static function ConvertTime($dataHora = '')
     {
         $timestampDH = 0;

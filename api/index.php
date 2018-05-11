@@ -188,6 +188,9 @@ Flight::route('POST /xml', function () {
 
         $res['url']['sefaz'] = $res['prot']['url'];
 
+        $res['detalhes'] = $nfe->detalhes();
+
+
         $res['status'] = 'ok';
         echo json_encode($res);
         exit;
