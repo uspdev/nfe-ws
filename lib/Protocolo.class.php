@@ -49,32 +49,34 @@ class Protocolo extends Common
     /*
  * Consulta a chave de NFe na Sefaz
  * Caso esteja no disco não consulta novamente para evitar 'uso indevido'
+ * retorna os dados do protocolo, incluindo os eventos
  * todo: tem de dar uma validade no cache do disco ou possibilidade de dar refresh manual
  */
     public function consulta($chave)
     {
-        $maxage = 360; // caso tenha mais de 10 mins, consulta de nvo a sefaz.
+        $maxage = 60 * 10; // caso tenha mais de 10 mins, consulta de novo a sefaz.
 
         if (!$this->chNFe = nfe_ws::validaChNFe($chave)) {
             return false;
         }
 
-        $this->protArq = $this->local . $this->chNFe . '-prot.xml';
+        $arq = $this->local . $this->chNFe . '-prot.xml';
         $ret = [];
-        $age = $maxage+1;
-        if (is_file($this->protArq)) {
-            $this->prot = file_get_contents($this->protArq);
-            $age = time() - filemtime($this->protArq);
-            $ret['age'] = Tools::msgTempo(time(), filemtime($this->protArq));
+        $age = time() - filemtime($arq);
+
+
+        if (!is_file($arq) || $age > $maxage) {
+            // se o arquivo não existir ou estiver velho
+            $this->prot = $this->tools->sefazConsultaChave($chave);
+            file_put_contents($arq, $this->prot);
+            $ret['age'] = 0;
+        } else {
+            // caso contrário pega do disco
+            $this->prot = file_get_contents($arq);
+            $ret['age'] = $age;
         }
 
-        // se o protocolo for antigo ou se não exixtir
-        if ($age > $maxage) {
-            $this->prot = $this->tools->sefazConsultaChave($chave);
-            file_put_contents($this->protArq, $this->prot);
-            $ret['age'] = 0;
-        }
-        $ret = array_merge($ret, $prot_arr = $this->parse());
+        $ret = array_merge($ret, $this->parse());
 
         return $ret;
     }

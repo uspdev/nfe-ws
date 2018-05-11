@@ -89,12 +89,8 @@ class nfe_ws extends Common
         $id = $danfe->montaDANFE();
         $pdf = $danfe->render();
 
-        if (!file_exists($danfeArq)) {
-            file_put_contents($danfeArq, $pdf);
-        }
+        file_put_contents($danfeArq, $pdf);
 
-        $res['age'] = Tools::msgTempo(time(), filemtime($danfeArq));
-        //$res['file'] = $danfeArq;
         $res['url'] = $this->c->baseUrl . 'api/danfe/' . $chave . '-danfe.pdf';
         $res['status'] = 'ok';
         return $res;
@@ -199,6 +195,7 @@ class nfe_ws extends Common
     /*
      * Combina informações do XML e do protocolo para gerar um documento
      * similar ao da consulta de NFE na sefaz
+     * retorna o caminho completo (url) do arquivo gerado
      */
     public function geraProtocolo($prot)
     {

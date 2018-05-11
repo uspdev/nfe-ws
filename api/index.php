@@ -175,21 +175,19 @@ Flight::route('POST /xml', function () {
         $res['url']['danfe'] = $res['danfe']['url'];
 
         $prot = $prot->consulta($res['chave']);
+        //$res['prot'] = $prot;
 
-        // gera o protocolo
-        $res['prot'] = $nfe->geraProtocolo($prot);
+        // gera o protocolo e retorna o caminho
+        $res['url']['sefaz'] = $nfe->geraProtocolo($prot)['url'];
 
-        // vamos mostrar algumas informações para o usuário
-        $res['prot']['age'] = $prot['age'];
-        $res['prot']['cStat'] = $prot['cStat'];
-        $res['prot']['xMotivo'] = $prot['xMotivo'];
-        $res['prot']['dhConsulta'] = $prot['dhConsulta'];
-        $res['prot']['tpAmb'] = $prot['tpAmb'];
-
-        $res['url']['sefaz'] = $res['prot']['url'];
+        // vamos mostrar algumas informações do protocolo para o usuário
+        $sefaz['cStat'] = $prot['cStat'];
+        $sefaz['xMotivo'] = $prot['xMotivo'];
+        $sefaz['dhConsulta'] = $prot['dhConsulta'];
+        $sefaz['tpAmb'] = $prot['tpAmb'];
+        $res['sefaz'] = $sefaz;
 
         $res['detalhes'] = $nfe->detalhes();
-
 
         $res['status'] = 'ok';
         echo json_encode($res);
