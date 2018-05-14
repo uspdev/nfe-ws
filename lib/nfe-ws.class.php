@@ -191,6 +191,8 @@ class nfe_ws extends Common
 
         $ret['infadic'] = $this->textoAdic();
 
+
+
         return $ret;
     }
 
@@ -205,7 +207,7 @@ class nfe_ws extends Common
             }
             $textoAdic .= !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
                 'Inf. Contribuinte: ' .
-                trim($this->pAnfavea($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue)) : '';
+                trim($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) : '';
 
             $textoAdic .= $this->pSimpleGetValue($this->dest, "email", ' Email do Destinatário: ');
             $textoAdic .= !empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
