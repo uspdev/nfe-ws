@@ -294,8 +294,12 @@ class nfe_ws extends Common
         $tpl->tpNF = $this->ide->getElementsByTagName('tpNF')->item(0)->nodeValue;
         $tpl->tpNF = $tpl->tpNF . ' - ' . Storage::tpNF($tpl->tpNF);
 
-        $tpl->indPag = $this->ide->getElementsByTagName('indPag')->item(0)->nodeValue;
-        $tpl->indPag = $tpl->indPag . ' - ' . Storage::indPag($tpl->indPag);
+        if ($this->versao >= 4) { // indPAg foi removido
+            $tpl->indPag = '';
+        } else {
+            $tpl->indPag = $this->ide->getElementsByTagName('indPag')->item(0)->nodeValue;
+            $tpl->indPag = $tpl->indPag . ' - ' . Storage::indPag($tpl->indPag);
+        }
 
         $tpl->digestValue = $this->dom->getElementsByTagName('DigestValue')->item(0)->nodeValue;
 
