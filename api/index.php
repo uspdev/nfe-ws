@@ -175,7 +175,7 @@ Flight::route('POST /xml', function () {
         $res['url']['danfe'] = $res['danfe']['url'];
 
         $prot = $prot->consulta($res['chave']);
-        //$res['prot'] = $prot;
+        $res['prot'] = $prot;
 
         // gera o protocolo e retorna o caminho
         $res['url']['sefaz'] = $nfe->geraProtocolo($prot)['url'];
