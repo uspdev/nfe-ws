@@ -7,7 +7,7 @@ use NFePHP\DA\Legacy\Common;
 use NFePHP\DA\NFe\Danfe;
 
 
-class nfe_ws extends Common
+class nfe_ws extends Danfe
 {
     protected $local;
     protected $tools;
@@ -200,30 +200,109 @@ class nfe_ws extends Common
     protected function textoAdic()
     {
         $textoAdic = '';
+        if (isset($this->retirada)) {
+            $txRetCNPJ = ! empty($this->retirada->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("CNPJ")->item(0)->nodeValue :
+                '';
+            $txRetxLgr = ! empty($this->retirada->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("xLgr")->item(0)->nodeValue :
+                '';
+            $txRetnro = ! empty($this->retirada->getElementsByTagName("nro")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("nro")->item(0)->nodeValue :
+                's/n';
+            $txRetxCpl = $this->pSimpleGetValue($this->retirada, "xCpl", " - ");
+            $txRetxBairro = ! empty($this->retirada->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("xBairro")->item(0)->nodeValue :
+                '';
+            $txRetxMun = ! empty($this->retirada->getElementsByTagName("xMun")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("xMun")->item(0)->nodeValue :
+                '';
+            $txRetUF = ! empty($this->retirada->getElementsByTagName("UF")->item(0)->nodeValue) ?
+                $this->retirada->getElementsByTagName("UF")->item(0)->nodeValue :
+                '';
+            $textoAdic .= "LOCAL DE RETIRADA : ".
+                $txRetCNPJ.
+                '-' .
+                $txRetxLgr .
+                ', ' .
+                $txRetnro .
+                ' ' .
+                $txRetxCpl .
+                ' - ' .
+                $txRetxBairro .
+                ' ' .
+                $txRetxMun .
+                ' - ' .
+                $txRetUF .
+                "\r\n";
+        }
+        //dados do local de entrega da mercadoria
+        if (isset($this->entrega)) {
+            $txRetCNPJ = ! empty($this->entrega->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("CNPJ")->item(0)->nodeValue : '';
+            $txRetxLgr = ! empty($this->entrega->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("xLgr")->item(0)->nodeValue : '';
+            $txRetnro = ! empty($this->entrega->getElementsByTagName("nro")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("nro")->item(0)->nodeValue : 's/n';
+            $txRetxCpl = $this->pSimpleGetValue($this->entrega, "xCpl", " - ");
+            $txRetxBairro = ! empty($this->entrega->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("xBairro")->item(0)->nodeValue : '';
+            $txRetxMun = ! empty($this->entrega->getElementsByTagName("xMun")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("xMun")->item(0)->nodeValue : '';
+            $txRetUF = ! empty($this->entrega->getElementsByTagName("UF")->item(0)->nodeValue) ?
+                $this->entrega->getElementsByTagName("UF")->item(0)->nodeValue : '';
+            if ($textoAdic != '') {
+                $textoAdic .= ". \r\n";
+            }
+            $textoAdic .= "LOCAL DE ENTREGA : ".$txRetCNPJ.'-'.$txRetxLgr.', '.$txRetnro.' '.$txRetxCpl.
+                ' - '.$txRetxBairro.' '.$txRetxMun.' - '.$txRetUF."\r\n";
+        }
+        //informações adicionais
+        $textoAdic .= $this->pGeraInformacoesDasNotasReferenciadas();
         if (isset($this->infAdic)) {
             $i = 0;
             if ($textoAdic != '') {
                 $textoAdic .= ". \r\n";
             }
-            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
+            $textoAdic .= ! empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
                 'Inf. Contribuinte: ' .
-                trim($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) : '';
-
+                trim($this->pAnfavea($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue)) : '';
+            $infPedido = $this->pGeraInformacoesDaTagCompra();
+            if ($infPedido != "") {
+                $textoAdic .= $infPedido;
+            }
             $textoAdic .= $this->pSimpleGetValue($this->dest, "email", ' Email do Destinatário: ');
-            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
+            $textoAdic .= ! empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
                 "\r\n Inf. fisco: " .
                 trim($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) : '';
             $obsCont = $this->infAdic->getElementsByTagName("obsCont");
             if (isset($obsCont)) {
                 foreach ($obsCont as $obs) {
-                    $campo = $obsCont->item($i)->getAttribute("xCampo");
-                    $xTexto = !empty($obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue) ?
+                    $campo =  $obsCont->item($i)->getAttribute("xCampo");
+                    $xTexto = ! empty($obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue) ?
                         $obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue : '';
                     $textoAdic .= "\r\n" . $campo . ':  ' . trim($xTexto);
                     $i++;
                 }
             }
         }
+        //INCLUSO pela NT 2013.003 Lei da Transparência
+        //verificar se a informação sobre o valor aproximado dos tributos
+        //já se encontra no campo de informações adicionais
+        if ($this->exibirValorTributos) {
+            $flagVTT = strpos(strtolower(trim($textoAdic)), 'valor');
+            $flagVTT = $flagVTT || strpos(strtolower(trim($textoAdic)), 'vl');
+            $flagVTT = $flagVTT && strpos(strtolower(trim($textoAdic)), 'aprox');
+            $flagVTT = $flagVTT && (strpos(strtolower(trim($textoAdic)), 'trib') ||
+                    strpos(strtolower(trim($textoAdic)), 'imp'));
+            $vTotTrib = $this->pSimpleGetValue($this->ICMSTot, 'vTotTrib');
+            if ($vTotTrib != '' && !$flagVTT) {
+                $textoAdic .= "\n Valor Aproximado dos Tributos : R$ " . number_format($vTotTrib, 2, ",", ".");
+            }
+        }
+        //fim da alteração NT 2013.003 Lei da Transparência
+        $textoAdic = str_replace(";", "\n", $textoAdic);
+        return $textoAdic;
     }
 
     /*
