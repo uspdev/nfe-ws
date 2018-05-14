@@ -189,12 +189,39 @@ class nfe_ws extends Common
         $dest['nome'] = $this->dest->getElementsByTagName('xNome')->item(0)->nodeValue;
         $ret['dest'] = $dest;
 
-        if (!empty($this->infAdic)) {
-            $ret['infadic'] = $this->infAdic->getElementsByTagName('infCpl')->item(0)->nodeValue;
-        }
-
+        $ret['infadic'] = $this->textoAdic();
 
         return $ret;
+    }
+
+
+    protected function textoAdic()
+    {
+        $textoAdic = '';
+        if (isset($this->infAdic)) {
+            $i = 0;
+            if ($textoAdic != '') {
+                $textoAdic .= ". \r\n";
+            }
+            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
+                'Inf. Contribuinte: ' .
+                trim($this->pAnfavea($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue)) : '';
+
+            $textoAdic .= $this->pSimpleGetValue($this->dest, "email", ' Email do Destinatário: ');
+            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
+                "\r\n Inf. fisco: " .
+                trim($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) : '';
+            $obsCont = $this->infAdic->getElementsByTagName("obsCont");
+            if (isset($obsCont)) {
+                foreach ($obsCont as $obs) {
+                    $campo = $obsCont->item($i)->getAttribute("xCampo");
+                    $xTexto = !empty($obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue) ?
+                        $obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue : '';
+                    $textoAdic .= "\r\n" . $campo . ':  ' . trim($xTexto);
+                    $i++;
+                }
+            }
+        }
     }
 
     /*
