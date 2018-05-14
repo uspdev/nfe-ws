@@ -71,8 +71,10 @@ class nfe_ws extends Common
         if (!file_exists($nfeArq)) {
             file_put_contents($nfeArq, $this->xml);
         }
+        $this->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
         $res['url'] = $this->c->baseUrl . 'api/xml/' . $this->retornaChave() . '-nfe.xml';
         $res['import'] = 'Importado com sucesso';
+        $res['vesao'] = $this->versao;
         $res['status'] = 'ok';
         return $res;
     }
@@ -187,7 +189,10 @@ class nfe_ws extends Common
         $dest['nome'] = $this->dest->getElementsByTagName('xNome')->item(0)->nodeValue;
         $ret['dest'] = $dest;
 
-        $ret['infadic'] = $this->infAdic->getElementsByTagName('infCpl')->item(0)->nodeValue;
+        if (!empty($this->infAdic)) {
+            $ret['infadic'] = $this->infAdic->getElementsByTagName('infCpl')->item(0)->nodeValue;
+        }
+
 
         return $ret;
     }
@@ -226,7 +231,7 @@ class nfe_ws extends Common
         $tpl->chNFe = $this->pFormat($this->chNFe, '##-####-##.###.###/####-##-##-###-###.###.###-###.###.###-#');
         $tpl->nNF = $this->ide->getElementsByTagName('nNF')->item(0)->nodeValue;
 
-        $this->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
+
         $tpl->versao = $this->versao;
 
         $tpl->serie = $this->ide->getElementsByTagName('serie')->item(0)->nodeValue;
@@ -398,9 +403,10 @@ class nfe_ws extends Common
 
             }
         } else {
-            if (!$dhSaiEnt = $this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue) {
+            if (empty($this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue)) {
                 return '';
             } else {
+                $dhSaiEnt = $this->ide->getElementsByTagName('dSaiEnt')->item(0)->nodeValue;
                 return date("d/m/Y H:i:s", $this->pConvertTime($dhSaiEnt));
             }
         }
