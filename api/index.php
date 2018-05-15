@@ -14,6 +14,9 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
     exit;
 }
 
+// Aparecerá na resposta referente a sefaz
+define('VERSAO', 'v2.0.1');
+
 require_once '../config.php';
 require_once '../vendor/autoload.php';
 require_once '../lib/Config.class.php';
@@ -89,6 +92,22 @@ Flight::route('GET /danfe/@file', function ($file) {
     }
 });
 
+Flight::route('GET /prot/@arq', function ($file) {
+
+    $c = new Config();
+    $arq = $c->local . $file;
+
+    if (is_file($arq)) {
+        header('Content-Type: application/xml; charset=utf-8');
+        header("Content-Disposition:attachment;filename=$file");
+        readfile($arq);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo 'Arquivo nao encontrado!';
+        exit();
+    }
+});
+
 Flight::route('GET /sefaz/@arq', function ($file) {
 
     $c = new Config();
@@ -144,7 +163,11 @@ Flight::route('POST /xml', function () {
         }
         $res['chave'] = $chave;
         $res['prot'] = $prot->consulta($res['chave']);
-        $res['xml'] = 'sem xml';
+
+        $res['url']['proto'] = $res['prot']['url'];
+        unset($res['prot']['url']);
+
+        $res['xml']['status'] = 'sem xml';
         echo json_encode($res);
         exit;
     }
@@ -157,38 +180,49 @@ Flight::route('POST /xml', function () {
         $nfe_xml = $_POST['xml'];
 
         $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
-        if ($res['xml']['status'] != 'ok') {
-            echo json_encode($res);
-            exit;
-        };
 
-        $res['xml2'] = $nfe->import($nfe_xml);
-        if ($res['xml2']['status'] != 'ok') {
+        // caso tenha um erro crítico vamos parar o processo
+        if ($res['xml']['status'] == 'stop') {
             echo json_encode($res);
             exit;
-        };
-        $res['url']['xml'] = $res['xml2']['url'];
+        }
+
+        // como parece que é uma nfe, vamos tentar extrair todos os dados
+        $res['xml'] = array_merge($res['xml'], $nfe->import($nfe_xml));
+
+        if ($res['xml']['url']) {
+            $res['url']['xml'] = $res['xml']['url'];
+            unset ($res['xml']['url']);
+        }
 
         $res['chave'] = $nfe->retornaChave();
-        $res['danfe'] = $nfe->geraDanfe();
 
-        $res['url']['danfe'] = $res['danfe']['url'];
+        $danfe = $nfe->geraDanfe();
+        $res['url']['danfe'] = $danfe['url'];
 
         $prot = $prot->consulta($res['chave']);
         $res['prot'] = $prot;
 
-        // gera o protocolo e retorna o caminho
-        $res['url']['sefaz'] = $nfe->geraProtocolo($prot)['url'];
+        if ($prot['status'] == 'ok') {
 
-        // vamos mostrar algumas informações do protocolo para o usuário
-        $sefaz['age'] = $prot['age'];
-        $sefaz['cStat'] = $prot['cStat'];
-        $sefaz['xMotivo'] = $prot['xMotivo'];
-        $sefaz['dhConsulta'] = $prot['dhConsulta'];
-        $sefaz['tpAmb'] = $prot['tpAmb'];
-        $res['sefaz'] = $sefaz;
+            // vamos mostrar algumas informações do protocolo para o usuário
+            $sefaz['age'] = $prot['age'];
+            $sefaz['cStat'] = $prot['cStat'];
+            $sefaz['xMotivo'] = $prot['xMotivo'];
+            $sefaz['dhConsulta'] = $prot['dhConsulta'];
+            $sefaz['tpAmb'] = $prot['tpAmb'];
+            $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
+            $res['sefaz'] = $sefaz;
 
-        $res['detalhes'] = $nfe->detalhes();
+            $res['url']['proto'] = $res['prot']['url'];
+            unset($res['prot']['url']);
+
+            // gera o protocolo e retorna o caminho somente se houver xml
+            $sefaz = $nfe->geraProtocolo($prot);
+            $res['url']['sefaz'] = $sefaz['url'];
+        }
+
+        $res['nfe'] = $nfe->detalhes();
 
         $res['status'] = 'ok';
         echo json_encode($res);

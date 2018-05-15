@@ -108,7 +108,8 @@ class Storage
             100 => 'Aprovada',
             101 => 'Cancelada',
             102 => 'Inutilizada',
-            110 => 'Denegada');
+            110 => 'Denegada',
+            526 => 'Rejeição - atraso superior a 6 meses');
         return $cStat[$id];
     }
 

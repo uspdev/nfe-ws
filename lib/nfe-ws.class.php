@@ -61,20 +61,23 @@ class nfe_ws extends Danfe
 
             //verifica se o XML é uma NF-e modelo 55, pois não pode ser 65 (NFC-e)
             if ($this->pSimpleGetValue($this->ide, "mod") != '55') {
-                $res['NFe'] = 'Não é NFe modelo 55.';
+                $res['modelo'] = 'Não é NFe modelo 55.';
                 $res['status'] = 'Erro';
                 return $res;
+            } else {
+                $res['modelo'] = '55';
             }
         }
 
         $nfeArq = $this->local . $this->retornaChave() . '-nfe.xml'; // nome e caminho do arquivo xml
-        if (!file_exists($nfeArq)) {
-            file_put_contents($nfeArq, $this->xml);
-        }
+        //if (!file_exists($nfeArq)) {
+        // sempre salva o arquivo novo enviado sobrescrevendo o já existente
+        file_put_contents($nfeArq, $this->xml);
+        //}
         $this->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
         $res['url'] = $this->c->baseUrl . 'api/xml/' . $this->retornaChave() . '-nfe.xml';
         $res['import'] = 'Importado com sucesso';
-        $res['vesao'] = $this->versao;
+        $res['versao'] = $this->versao;
         $res['status'] = 'ok';
         return $res;
     }
@@ -108,44 +111,57 @@ class nfe_ws extends Danfe
         $dom = new DOMDocument('1.0', 'utf-8');
         $dom->preserveWhiteSpace = true;
         $dom->formatOutput = false;
+
         $res = [];
+        $res['status'] = true;
         try {
             $dom->loadXML($xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG);
+            $res['estrutura'] = 'Esrutura do XML está OK';
         } catch (Exception $e) {
-            $res['status'] = false;
-            $res['msg'] = 'XML mal formado: ' . $e->getMessage();
+            $res['status'] = 'stop';
+            $res['estrutura'] = 'XML mal formado: ' . $e->getMessage();
             return $res;
         }
-        $res['estrutura'] = 'Esrutura do XML está OK';
+
+        if ($dom->getElementsByTagName("nfeProc")->length == 0) {
+            // nesse caso é um xml mas não de NFE (sem a tag inicial)
+            $res['estrutura'] = 'Não tem nfeProc';
+            $res['status'] = 'stop';
+            return $res;
+        }
 
         try {
-            Signer::existsSignature($xml);
+
+            $assinatura = Signer::existsSignature($xml);
         } catch (exception $e) {
-            $res['msg'] = 'Sem assinatura';
+            $res['assinatura'] = 'Sem assinatura: ' . $e->getMessage();
             $res['status'] = false;
-            return $res;
-        };
+            // dá para continuar sem assinatura mas já não tem validade fiscal
+        }
+
+        try {
+            if ($assinatura) {
+                Signer::signatureCheck($xml);
+                $res['assinatura'] = 'Assinatura ok';
+            }
+        } catch (exception $e) {
+            $res['assinatura'] = 'Assinatura não confere: ' . $e->getMessage();
+            $res['status'] = false;
+        }
 
 
         try {
             Signer::digestCheck($xml);
+            $res['digest'] = 'Digest ok';
         } catch (exception $e) {
-            $res['msg'] = 'Digest não confere';
+            $res['digest'] = 'Erro: ' . $e->getMessage();
             $res['status'] = false;
-            return $res;
         }
-        $res['assinatura-digest'] = 'Confere';
 
-        try {
-            Signer::signatureCheck($xml);
-        } catch (exception $e) {
-            $res['msg'] = 'Assinatura não confere';
-            $res['status'] = false;
-            return $res;
+
+        if ($res['status']) {
+            $res['status'] = 'ok';
         }
-        $res['assinatura'] = 'Assinatuta confere';
-
-        $res['status'] = 'ok';
 
         return $res;
     }
@@ -192,7 +208,6 @@ class nfe_ws extends Danfe
         $ret['infadic'] = $this->textoAdic();
 
 
-
         return $ret;
     }
 
@@ -201,27 +216,27 @@ class nfe_ws extends Danfe
     {
         $textoAdic = '';
         if (isset($this->retirada)) {
-            $txRetCNPJ = ! empty($this->retirada->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
+            $txRetCNPJ = !empty($this->retirada->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("CNPJ")->item(0)->nodeValue :
                 '';
-            $txRetxLgr = ! empty($this->retirada->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
+            $txRetxLgr = !empty($this->retirada->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("xLgr")->item(0)->nodeValue :
                 '';
-            $txRetnro = ! empty($this->retirada->getElementsByTagName("nro")->item(0)->nodeValue) ?
+            $txRetnro = !empty($this->retirada->getElementsByTagName("nro")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("nro")->item(0)->nodeValue :
                 's/n';
             $txRetxCpl = $this->pSimpleGetValue($this->retirada, "xCpl", " - ");
-            $txRetxBairro = ! empty($this->retirada->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
+            $txRetxBairro = !empty($this->retirada->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("xBairro")->item(0)->nodeValue :
                 '';
-            $txRetxMun = ! empty($this->retirada->getElementsByTagName("xMun")->item(0)->nodeValue) ?
+            $txRetxMun = !empty($this->retirada->getElementsByTagName("xMun")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("xMun")->item(0)->nodeValue :
                 '';
-            $txRetUF = ! empty($this->retirada->getElementsByTagName("UF")->item(0)->nodeValue) ?
+            $txRetUF = !empty($this->retirada->getElementsByTagName("UF")->item(0)->nodeValue) ?
                 $this->retirada->getElementsByTagName("UF")->item(0)->nodeValue :
                 '';
-            $textoAdic .= "LOCAL DE RETIRADA : ".
-                $txRetCNPJ.
+            $textoAdic .= "LOCAL DE RETIRADA : " .
+                $txRetCNPJ .
                 '-' .
                 $txRetxLgr .
                 ', ' .
@@ -238,24 +253,24 @@ class nfe_ws extends Danfe
         }
         //dados do local de entrega da mercadoria
         if (isset($this->entrega)) {
-            $txRetCNPJ = ! empty($this->entrega->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
+            $txRetCNPJ = !empty($this->entrega->getElementsByTagName("CNPJ")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("CNPJ")->item(0)->nodeValue : '';
-            $txRetxLgr = ! empty($this->entrega->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
+            $txRetxLgr = !empty($this->entrega->getElementsByTagName("xLgr")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("xLgr")->item(0)->nodeValue : '';
-            $txRetnro = ! empty($this->entrega->getElementsByTagName("nro")->item(0)->nodeValue) ?
+            $txRetnro = !empty($this->entrega->getElementsByTagName("nro")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("nro")->item(0)->nodeValue : 's/n';
             $txRetxCpl = $this->pSimpleGetValue($this->entrega, "xCpl", " - ");
-            $txRetxBairro = ! empty($this->entrega->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
+            $txRetxBairro = !empty($this->entrega->getElementsByTagName("xBairro")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("xBairro")->item(0)->nodeValue : '';
-            $txRetxMun = ! empty($this->entrega->getElementsByTagName("xMun")->item(0)->nodeValue) ?
+            $txRetxMun = !empty($this->entrega->getElementsByTagName("xMun")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("xMun")->item(0)->nodeValue : '';
-            $txRetUF = ! empty($this->entrega->getElementsByTagName("UF")->item(0)->nodeValue) ?
+            $txRetUF = !empty($this->entrega->getElementsByTagName("UF")->item(0)->nodeValue) ?
                 $this->entrega->getElementsByTagName("UF")->item(0)->nodeValue : '';
             if ($textoAdic != '') {
                 $textoAdic .= ". \r\n";
             }
-            $textoAdic .= "LOCAL DE ENTREGA : ".$txRetCNPJ.'-'.$txRetxLgr.', '.$txRetnro.' '.$txRetxCpl.
-                ' - '.$txRetxBairro.' '.$txRetxMun.' - '.$txRetUF."\r\n";
+            $textoAdic .= "LOCAL DE ENTREGA : " . $txRetCNPJ . '-' . $txRetxLgr . ', ' . $txRetnro . ' ' . $txRetxCpl .
+                ' - ' . $txRetxBairro . ' ' . $txRetxMun . ' - ' . $txRetUF . "\r\n";
         }
         //informações adicionais
         $textoAdic .= $this->pGeraInformacoesDasNotasReferenciadas();
@@ -264,7 +279,7 @@ class nfe_ws extends Danfe
             if ($textoAdic != '') {
                 $textoAdic .= ". \r\n";
             }
-            $textoAdic .= ! empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
+            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
                 'Inf. Contribuinte: ' .
                 trim($this->pAnfavea($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue)) : '';
             $infPedido = $this->pGeraInformacoesDaTagCompra();
@@ -272,14 +287,14 @@ class nfe_ws extends Danfe
                 $textoAdic .= $infPedido;
             }
             $textoAdic .= $this->pSimpleGetValue($this->dest, "email", ' Email do Destinatário: ');
-            $textoAdic .= ! empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
+            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
                 "\r\n Inf. fisco: " .
                 trim($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) : '';
             $obsCont = $this->infAdic->getElementsByTagName("obsCont");
             if (isset($obsCont)) {
                 foreach ($obsCont as $obs) {
-                    $campo =  $obsCont->item($i)->getAttribute("xCampo");
-                    $xTexto = ! empty($obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue) ?
+                    $campo = $obsCont->item($i)->getAttribute("xCampo");
+                    $xTexto = !empty($obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue) ?
                         $obsCont->item($i)->getElementsByTagName("xTexto")->item(0)->nodeValue : '';
                     $textoAdic .= "\r\n" . $campo . ':  ' . trim($xTexto);
                     $i++;
@@ -407,7 +422,7 @@ class nfe_ws extends Danfe
         $tpl->tpNF = $this->ide->getElementsByTagName('tpNF')->item(0)->nodeValue;
         $tpl->tpNF = $tpl->tpNF . ' - ' . Storage::tpNF($tpl->tpNF);
 
-        if ($this->versao >= 4) { // indPAg foi removido
+        if ($this->versao >= 4) { // indPag foi removido
             $tpl->indPag = '';
         } else {
             $tpl->indPag = $this->ide->getElementsByTagName('indPag')->item(0)->nodeValue;
@@ -418,9 +433,11 @@ class nfe_ws extends Danfe
 
 
         // pega os dados do protocolo para colocar no pdf
-        if (empty($this->prot)) {
+        if (empty($this->prot) || $this->prot['status'] != 'ok') {
             return false;
         }
+
+        //print_r($this->prot);exit;
 
         $tpl->situacao = mb_strtoupper(Storage::cStat($this->prot['cStat']), 'UTF-8');
 
@@ -434,7 +451,7 @@ class nfe_ws extends Danfe
         }
 
         $tpl->dhConsulta = $this->prot['dhConsulta'];
-        $tpl->infoSistema = 'Sistema DELOS/NFE';
+        $tpl->infoSistema = 'Sistema DELOS/NFE '.VERSAO;
 
         $html = $tpl->parse();
         // Aqui termina a geração do HTML
