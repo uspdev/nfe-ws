@@ -107,13 +107,13 @@ class Protocolo extends Common
 
         // verifica o cStat do retorno
         if ($ret['cStat'] == 526) {
-            $ret['status'] = 'Sem retorno';
+            $ret['status'] = 'Erro: a nfe consultada foi gerada há mais de 6 meses';
             return $ret;
         }
 
         // verifica se houve retorno válido
         if (!$infProt = $cons->getElementsByTagName('infProt')->item(0)) {
-            $ret['status'] = 'retorno sem infProt';
+            $ret['status'] = 'Erro: Retorno sem infProt';
             return $ret;
         }
         $ret['status'] = 'ok';

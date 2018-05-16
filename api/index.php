@@ -211,8 +211,7 @@ Flight::route('POST /xml', function () {
             $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
             $res['sefaz'] = $sefaz;
 
-            $res['url']['proto'] = $prot['url'];
-            unset($prot['url']);
+
 
             // gera o protocolo e retorna o caminho somente se houver xml
             $sefaz = $nfe->geraProtocolo($prot);
@@ -229,6 +228,9 @@ Flight::route('POST /xml', function () {
                 }
             }
         }
+
+        $res['url']['proto'] = $prot['url'];
+        unset($prot['url']);
         $res['prot'] = $prot;
 
         $danfe = $nfe->geraDanfe();

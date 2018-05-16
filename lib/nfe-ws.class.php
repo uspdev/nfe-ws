@@ -116,10 +116,10 @@ class nfe_ws extends Danfe
         $res['status'] = true;
         try {
             $dom->loadXML($xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG);
-            $res['estrutura'] = 'Esrutura do XML está OK';
+            $res['estrutura'] = 'Estrutura do XML está OK';
         } catch (Exception $e) {
             $res['status'] = 'stop';
-            $res['estrutura'] = 'XML mal formado: ' . $e->getMessage();
+            $res['estrutura'] = 'Erro: XML mal formado: ' . $e->getMessage();
             return $res;
         }
 
@@ -135,7 +135,7 @@ class nfe_ws extends Danfe
             // nesse caso é um xml mas não de NFE (sem a tag inicial)
             // tem um caso de nfe que passa no validador RS mas nao tem nfeproc
             // entao vamos consultar a tag infNfe
-            $res['estrutura'] = 'Não tem infNFe';
+            $res['estrutura'] = 'Erro: Não tem infNFe';
             $res['status'] = 'stop';
             return $res;
         }
@@ -143,7 +143,7 @@ class nfe_ws extends Danfe
         try {
             $assinatura = Signer::existsSignature($xml);
         } catch (exception $e) {
-            $res['assinatura'] = 'Sem assinatura: ' . $e->getMessage();
+            $res['assinatura'] = 'Erro: Sem assinatura - ' . $e->getMessage();
             $res['status'] = false;
             // dá para continuar sem assinatura mas já não tem validade fiscal
         }
@@ -154,7 +154,7 @@ class nfe_ws extends Danfe
                 $res['assinatura'] = 'Assinatura ok';
             }
         } catch (exception $e) {
-            $res['assinatura'] = 'Assinatura não confere: ' . $e->getMessage();
+            $res['assinatura'] = 'Erro: Assinatura não confere - ' . $e->getMessage();
             $res['status'] = false;
         }
 
@@ -163,7 +163,7 @@ class nfe_ws extends Danfe
                 Signer::digestCheck($xml);
                 $res['digest'] = 'Digest ok';
             } else {
-                $res['digest'] = 'Erro: sem Assinatura';
+                $res['digest'] = 'Erro: Sem assinatura';
                 $res['status'] = 'stop';
                 return $res; // vamos parar aqui se o xml estiver muito ruim
             }
