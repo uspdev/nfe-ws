@@ -123,9 +123,11 @@ class nfe_ws extends Danfe
             return $res;
         }
 
-        if ($dom->getElementsByTagName("nfeProc")->length == 0) {
+        if ($dom->getElementsByTagName("infNFe")->length == 0) {
             // nesse caso é um xml mas não de NFE (sem a tag inicial)
-            $res['estrutura'] = 'Não tem nfeProc';
+            // tem um caso de nfe que passa no validador RS mas nao tem nfeproc
+            // entao vamos consultar a tag infNfe
+            $res['estrutura'] = 'Não tem infNFe';
             $res['status'] = 'stop';
             return $res;
         }

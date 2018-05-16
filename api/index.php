@@ -15,7 +15,7 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
 }
 
 // Aparecerá na resposta referente a sefaz
-define('VERSAO', 'v2.0.1');
+define('VERSAO', 'v2.0.2');
 
 require_once '../config.php';
 require_once '../vendor/autoload.php';
