@@ -123,6 +123,14 @@ class nfe_ws extends Danfe
             return $res;
         }
 
+        if ($dom->getElementsByTagName("nfeProc")->length == 0) {
+            // sem nfeProc quer dizer que nao foi adicionado o protocolo da sefaz: sem valor fiscal
+            // mas ainda dá para tentar gerar a danfe, o que não é correto
+            $res['nfeproc'] = 'O XML não está protocolado: sem valor fiscal!';
+            //$res['status'] = 'stop';
+            //return $res;
+        }
+
         if ($dom->getElementsByTagName("infNFe")->length == 0) {
             // nesse caso é um xml mas não de NFE (sem a tag inicial)
             // tem um caso de nfe que passa no validador RS mas nao tem nfeproc

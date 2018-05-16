@@ -15,7 +15,7 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
 }
 
 // Aparecerá na resposta referente a sefaz
-define('VERSAO', 'v2.0.2');
+define('VERSAO', 'v2.0.3');
 
 require_once '../config.php';
 require_once '../vendor/autoload.php';
@@ -24,6 +24,8 @@ require_once '../lib/Tools.class.php';
 require_once '../lib/Storage.class.php';
 require_once '../lib/Protocolo.class.php';
 require_once '../lib/nfe-ws.class.php';
+
+use NFePHP\NFe\Complements;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
@@ -197,14 +199,9 @@ Flight::route('POST /xml', function () {
 
         $res['chave'] = $nfe->retornaChave();
 
-        $danfe = $nfe->geraDanfe();
-        $res['url']['danfe'] = $danfe['url'];
-
         $prot = $prot->consulta($res['chave']);
-        $res['prot'] = $prot;
 
         if ($prot['status'] == 'ok') {
-
             // vamos mostrar algumas informações do protocolo para o usuário
             $sefaz['age'] = $prot['age'];
             $sefaz['cStat'] = $prot['cStat'];
@@ -214,13 +211,28 @@ Flight::route('POST /xml', function () {
             $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
             $res['sefaz'] = $sefaz;
 
-            $res['url']['proto'] = $res['prot']['url'];
-            unset($res['prot']['url']);
+            $res['url']['proto'] = $prot['url'];
+            unset($prot['url']);
 
             // gera o protocolo e retorna o caminho somente se houver xml
             $sefaz = $nfe->geraProtocolo($prot);
             $res['url']['sefaz'] = $sefaz['url'];
+
+            // está cancelada, vamos anexar o protocolo de cancelamento
+            if ($prot['cStat'] == '101') {
+                try {
+                    $xml = Complements::cancelRegister($nfe_xml, $prot['raw']);
+                    header('Content-type: text/xml; charset=UTF-8');
+                    $nfe->import($xml); // salva a versao cancelada do XML
+                } catch (\Exception $e) {
+                    $prot['Registro do Cancelamento'] = "Erro: " . $e->getMessage();
+                }
+            }
         }
+        $res['prot'] = $prot;
+
+        $danfe = $nfe->geraDanfe();
+        $res['url']['danfe'] = $danfe['url'];
 
         $res['nfe'] = $nfe->detalhes();
 
