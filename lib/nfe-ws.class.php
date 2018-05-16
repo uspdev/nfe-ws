@@ -126,7 +126,7 @@ class nfe_ws extends Danfe
         if ($dom->getElementsByTagName("nfeProc")->length == 0) {
             // sem nfeProc quer dizer que nao foi adicionado o protocolo da sefaz: sem valor fiscal
             // mas ainda dá para tentar gerar a danfe, o que não é correto
-            $res['nfeproc'] = 'O XML não está protocolado: sem valor fiscal!';
+            $res['nfeproc'] = 'Erro: O XML não está protocolado portanto sem valor fiscal!';
             //$res['status'] = 'stop';
             //return $res;
         }
@@ -141,7 +141,6 @@ class nfe_ws extends Danfe
         }
 
         try {
-
             $assinatura = Signer::existsSignature($xml);
         } catch (exception $e) {
             $res['assinatura'] = 'Sem assinatura: ' . $e->getMessage();
@@ -159,10 +158,16 @@ class nfe_ws extends Danfe
             $res['status'] = false;
         }
 
-
         try {
-            Signer::digestCheck($xml);
-            $res['digest'] = 'Digest ok';
+            if (!empty($dom->getElementsByTagName('Signature')->item(0))) {
+                Signer::digestCheck($xml);
+                $res['digest'] = 'Digest ok';
+            } else {
+                $res['digest'] = 'Erro: sem Assinatura';
+                $res['status'] = 'stop';
+                return $res; // vamos parar aqui se o xml estiver muito ruim
+            }
+
         } catch (exception $e) {
             $res['digest'] = 'Erro: ' . $e->getMessage();
             $res['status'] = false;
