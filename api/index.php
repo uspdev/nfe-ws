@@ -15,7 +15,7 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
 }
 
 // Aparecerá na resposta referente a sefaz
-define('VERSAO', 'v2.0.4');
+define('VERSAO', 'v2.0.5');
 
 require_once '../config.php';
 require_once '../vendor/autoload.php';
@@ -62,21 +62,28 @@ Flight::route('*', function () {
     return true;
 });
 
-// está desativado??
-/*Flight::route('GET /NFe/@chave:[0-9]{44}/sefaz', function ($chave) {
+Flight::route('GET /@tipo:[a-z]+/@file', function ($tipo, $file) {
 
-    $nfe = new nfe_ws();
-    if (!$nfe->validaChave($chave)) {
-        $ret['status'] = 'chave inválida';
-        echo json_encode($ret);
-        exit;
+    switch ($tipo) {
+        case 'danfe':
+            $ctype = 'application/pdf';
+            break;
+        case 'prot':
+            $ctype = 'application/xml';
+            break;
+        case 'sefaz':
+            $ctype = 'application/pdf';
+            break;
+        case 'xml':
+            $ctype = 'application/xml';
+            break;
+        default:
+            //header('HTTP/1.0 404 Not Found');
+            echo 'erro';
+            exit;
     }
-    $pdf = $nfe->geraProtocolo($chave);
-    echo 'ok';
-
-});*/
-
-Flight::route('GET /danfe/@file', function ($file) {
+    // de fato, o tipo não é necessário pois pelo nome do arquivo dá para retornar o
+    // content type adequado.
 
     $c = new Config();
     $arq = $c->local . $file;
@@ -84,62 +91,14 @@ Flight::route('GET /danfe/@file', function ($file) {
     // tem de verificar o nome do arquivo, somente numeros.pdf
     //echo 'Aqui envia o arquivo pdf da danfe em: ' . $file;
     if (is_file($arq)) {
-        header("Content-type:application/pdf");
-        header("Content-Disposition:attachment;filename=$file");
+        header('Content-type:' . $ctype);
+        header('Content-Disposition:attachment;filename=' . $file);
         readfile($arq);
     } else {
         header('HTTP/1.0 404 Not Found');
         echo 'Arquivo nao encontrado!';
-        exit();
     }
-});
-
-Flight::route('GET /prot/@arq', function ($file) {
-
-    $c = new Config();
-    $arq = $c->local . $file;
-
-    if (is_file($arq)) {
-        header('Content-Type: application/xml; charset=utf-8');
-        header("Content-Disposition:attachment;filename=$file");
-        readfile($arq);
-    } else {
-        header('HTTP/1.0 404 Not Found');
-        echo 'Arquivo nao encontrado!';
-        exit();
-    }
-});
-
-Flight::route('GET /sefaz/@arq', function ($file) {
-
-    $c = new Config();
-    $arq = $c->local . $file;
-
-    if (is_file($arq)) {
-        header('Content-Type: application/pdf; charset=utf-8');
-        header("Content-Disposition:attachment;filename=$file");
-        readfile($arq);
-    } else {
-        header('HTTP/1.0 404 Not Found');
-        echo 'Arquivo nao encontrado!';
-        exit();
-    }
-});
-
-Flight::route('GET /xml/@arq', function ($file) {
-
-    $c = new Config();
-    $arq = $c->local . $file;
-
-    if (is_file($arq)) {
-        header('Content-Type: application/xml; charset=utf-8');
-        header("Content-Disposition:attachment;filename=$file");
-        readfile($arq);
-    } else {
-        header('HTTP/1.0 404 Not Found');
-        echo 'Arquivo nao encontrado!';
-        exit();
-    }
+    exit;
 });
 
 Flight::route('POST /xml', function () {
@@ -148,9 +107,13 @@ Flight::route('POST /xml', function () {
     $res['status'] = array();
     $res['url'] = array();
 
-    if (!isset($_POST['xml']) or !isset($_POST['chave'])) {
-        $res['status']['xml'] = 'erro post';
-        $res['status']['msg'] = 'No post data';
+
+    // tem de vir o XML ou a chave para continuar
+    // posteriormente podemos aceitar upload de arquivo.
+    if (isset($_POST['xml']) or isset($_POST['chave'])) {
+        // continua
+    } else {
+        $res['status'] = 'Erro: sem dados';
         echo json_encode($res);
         exit();
     }
@@ -197,42 +160,46 @@ Flight::route('POST /xml', function () {
             unset ($res['xml']['url']);
         }
 
+        // começamos sempre pela chave
         $res['chave'] = $nfe->retornaChave();
 
+        // pega o protocolo de consulta da sefaz
         $prot = $prot->consulta($res['chave']);
+        if ($prot['url']) {
+            $res['url']['proto'] = $prot['url'];
+            unset($prot['url']);
+        }
 
+        // se está cancelada, vamos anexar o protocolo de cancelamento
+        if ($prot['cStat'] == '101') {
+            try {
+                $nfe_xml_cancelada = Complements::cancelRegister($nfe_xml, $prot['raw']);
+                $nfe->import($nfe_xml_cancelada); // salva a versao cancelada do XML
+            } catch (Exception $e) {
+                $prot['Registro do Cancelamento'] = "Erro: " . $e->getMessage();
+            }
+        }
+        $res['prot'] = $prot;
+
+        // vamos gerar o relatório da sefaz se o protocolo permitir
         if ($prot['status'] == 'ok') {
-            // vamos mostrar algumas informações do protocolo para o usuário
             $sefaz['age'] = $prot['age'];
             $sefaz['cStat'] = $prot['cStat'];
             $sefaz['xMotivo'] = $prot['xMotivo'];
             $sefaz['dhConsulta'] = $prot['dhConsulta'];
             $sefaz['tpAmb'] = $prot['tpAmb'];
             $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
-            $res['sefaz'] = $sefaz;
 
+            $relat = $nfe->geraRelatorioSefaz($prot);
+            $res['url']['sefaz'] = $relat['url'];
 
-
-            // gera o protocolo e retorna o caminho somente se houver xml
-            $sefaz = $nfe->geraProtocolo($prot);
-            $res['url']['sefaz'] = $sefaz['url'];
-
-            // está cancelada, vamos anexar o protocolo de cancelamento
-            if ($prot['cStat'] == '101') {
-                try {
-                    $xml = Complements::cancelRegister($nfe_xml, $prot['raw']);
-                    header('Content-type: text/xml; charset=UTF-8');
-                    $nfe->import($xml); // salva a versao cancelada do XML
-                } catch (\Exception $e) {
-                    $prot['Registro do Cancelamento'] = "Erro: " . $e->getMessage();
-                }
-            }
+        } else {
+            $sefaz['status'] = 'Não disponível';
+            $sefaz['info'] = 'Como há problemas no protocolo, não foi possível gerar relatório de consulta à Sefaz.';
         }
+        $res['sefaz'] = $sefaz;
 
-        $res['url']['proto'] = $prot['url'];
-        unset($prot['url']);
-        $res['prot'] = $prot;
-
+        // vamos gerar a danfe aqui
         $danfe = $nfe->geraDanfe();
         $res['url']['danfe'] = $danfe['url'];
 

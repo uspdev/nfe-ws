@@ -58,7 +58,6 @@ class nfe_ws extends Danfe
             $this->infAdic = $this->dom->getElementsByTagName("infAdic")->item(0);
             $this->compra = $this->dom->getElementsByTagName("compra")->item(0);
 
-
             //verifica se o XML é uma NF-e modelo 55, pois não pode ser 65 (NFC-e)
             if ($this->pSimpleGetValue($this->ide, "mod") != '55') {
                 $res['modelo'] = 'Não é NFe modelo 55.';
@@ -167,12 +166,10 @@ class nfe_ws extends Danfe
                 $res['status'] = 'stop';
                 return $res; // vamos parar aqui se o xml estiver muito ruim
             }
-
         } catch (exception $e) {
             $res['digest'] = 'Erro: ' . $e->getMessage();
             $res['status'] = false;
         }
-
 
         if ($res['status']) {
             $res['status'] = 'ok';
@@ -340,7 +337,7 @@ class nfe_ws extends Danfe
      * similar ao da consulta de NFE na sefaz
      * retorna o caminho completo (url) do arquivo gerado
      */
-    public function geraProtocolo($prot)
+    public function geraRelatorioSefaz($prot)
     {
         $this->prot = $prot;
         $debug = false;

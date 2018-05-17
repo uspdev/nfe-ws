@@ -68,10 +68,7 @@ class Protocolo extends Common
         if (!is_file($arq) || $age > $maxage) {
             // se o arquivo não existir ou estiver velho
             $this->prot = $this->tools->sefazConsultaChave($chave);
-            // tem de verificar se cstat = 526:
-            // Rejeicao: Ano-Mes da Chave de Acesso com atraso superior a 6 meses em relacao ao Ano-Mes atual
             file_put_contents($arq, $this->prot);
-            // se cstat é bom salva junto da NFE, ou no caso manda pro usuario no webservice
             $ret['age'] = 0;
         } else {
             // caso contrário pega do disco
