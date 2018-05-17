@@ -99,8 +99,15 @@ class Protocolo extends Common
         $ret['xMotivo'] = $cons->getElementsByTagName('xMotivo')->item(0)->nodeValue;
         $ret['tpAmb'] = $cons->getElementsByTagName('tpAmb')->item(0)->nodeValue;
         // esta primeira data é a da consulta do protocolo
-        $ret['dhConsulta'] = date("d/m/Y - H:i:s",
-            $this->pConvertTime($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue));
+        // num retorno não veio dhConsulta, então vamos testar
+        if (!empty($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue)) {
+            $ret['dhConsulta'] = date("d/m/Y - H:i:s",
+                $this->pConvertTime($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue));
+        } else {
+            $arq = $this->local . $this->chNFe . '-prot.xml';
+            $ret['dhConsulta'] = date('d/m/Y - H:i:s', filemtime($arq)).' (data do arquivo)';
+        }
+
 
         // verifica o cStat do retorno
         if ($ret['cStat'] == 526) {
