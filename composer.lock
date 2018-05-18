@@ -274,12 +274,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-da.git",
-                "reference": "fd26f4bd8f786b154c800a2569d41b3b69c29536"
+                "reference": "46e7adc94d67d4615b46cdca0b03fda0f62e65b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/fd26f4bd8f786b154c800a2569d41b3b69c29536",
-                "reference": "fd26f4bd8f786b154c800a2569d41b3b69c29536",
+                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/46e7adc94d67d4615b46cdca0b03fda0f62e65b1",
+                "reference": "46e7adc94d67d4615b46cdca0b03fda0f62e65b1",
                 "shasum": ""
             },
             "require": {
@@ -334,20 +334,20 @@
                 "nfephp",
                 "sped"
             ],
-            "time": "2018-05-16T20:47:59+00:00"
+            "time": "2018-05-18T13:58:34+00:00"
         },
         {
             "name": "nfephp-org/sped-nfe",
-            "version": "v5.0.45",
+            "version": "v5.0.46",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-nfe.git",
-                "reference": "06326b1e612027c97aa9b7215fb543510d52e4bf"
+                "reference": "fcd8d7d3379099d11663d2e06c772b21d54d1b6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-nfe/zipball/06326b1e612027c97aa9b7215fb543510d52e4bf",
-                "reference": "06326b1e612027c97aa9b7215fb543510d52e4bf",
+                "url": "https://api.github.com/repos/nfephp-org/sped-nfe/zipball/fcd8d7d3379099d11663d2e06c772b21d54d1b6b",
+                "reference": "fcd8d7d3379099d11663d2e06c772b21d54d1b6b",
                 "shasum": ""
             },
             "require": {
@@ -399,7 +399,7 @@
                 "nfephp",
                 "sped"
             ],
-            "time": "2018-05-17T11:47:40+00:00"
+            "time": "2018-05-18T13:54:53+00:00"
         },
         {
             "name": "psr/log",
