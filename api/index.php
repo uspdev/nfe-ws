@@ -118,8 +118,8 @@ Flight::route('POST /xml', function () {
         exit();
     }
 
-    // se vier somente a chave
-    if ($_POST['chave'] != '') {
+    // se vier a chave
+    if (!empty($_POST['chave'])) {
         $prot = new Protocolo();
         if (!$chave = nfe_ws::validaChNFe($_POST['chave'])) {
             $res['status'] = 'Chave incorreta ' . strlen($_POST['chave']);
@@ -138,7 +138,7 @@ Flight::route('POST /xml', function () {
     }
 
     // se vier o xml
-    if ($_POST['xml'] != '') {
+    if (!empty($_POST['xml'])) {
         $nfe = new nfe_ws();
         $prot = new Protocolo();
 
