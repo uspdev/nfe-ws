@@ -19,6 +19,7 @@ class nfe_ws extends Danfe
     {
         $this->c = new Config();
         $this->local = $this->c->local;
+        parent::__construct();
     }
 
     /*
@@ -89,7 +90,7 @@ class nfe_ws extends Danfe
         $chave = $this->retornaChave();
         $danfeArq = $this->local . $chave . '-danfe.pdf';
 
-        $danfe = new Danfe($this->xml, 'P', 'A4', 'images/logo.jpg', 'I', '');
+        $danfe = new Danfe($this->xml, 'P', 'A4', '', 'I', '');
         $id = $danfe->montaDANFE();
         $pdf = $danfe->render();
 
