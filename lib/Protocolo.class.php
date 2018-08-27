@@ -17,13 +17,14 @@ class Protocolo extends Common
         $this->local = $this->c->local;
 
         $arr = [
-            "atualizacao" => "2016-11-03 18:01:21",
-            "tpAmb" => 1,
+            "atualizacao" => "2018-08-27 10:26:00",
+            "tpAmb" => 1, // producao
             "razaosocial" => "Escola de Engenharia de São Carlos",
             "cnpj" => "63025530002824",
             "siglaUF" => "SP",
-            "schemes" => "PL008i2",
-            "versao" => '3.10'
+            //"schemes" => "PL008i2",
+            "schemes" => "PL009_V4",
+            "versao" => '4.00'
         ];
         //monta o config.json
         $configJson = json_encode($arr);
