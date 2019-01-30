@@ -2,6 +2,8 @@
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
+
+require_once '../config.php';
 require_once '../vendor/autoload.php';
 
 use NFePHP\NFe\Tools;
@@ -31,7 +33,7 @@ $arr = [
 //monta o config.json
 $configJson = json_encode($arr);
 //carrega o conteudo do certificado.
-$content = file_get_contents('../local/certs/certificado2018-2019.pfx');
+$content = file_get_contents($cfg['cert_file']);
 
 
 $nfe = file_get_contents('modelo-nfe2.xml');
