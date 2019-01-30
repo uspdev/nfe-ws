@@ -23,8 +23,8 @@ $cfg['baseUrl'] = 'http://servidor/nfe-ws/';
 
 // o apache deve ser configurado para apontar para a pasta api
 /*
-Alias /nfe-ws/api /home/sistemas/uspdev-nfe-ws/api
-<Directory /home/sistemas/uspdev-nfe-ws/api/>
+Alias /nfe-ws/api /home/sistemas/nfe-ws/api
+<Directory /home/sistemas/nfe-ws/api/>
                 Options Indexes FollowSymlinks MultiViews
                 Require all granted
                 AllowOverride All
