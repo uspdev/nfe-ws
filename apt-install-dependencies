@@ -1,3 +1,7 @@
 # pacotes no sped-nfe
 # php-openssl não existe pacote mas já vem habilitado no ubuntu 16.04
 apt install php-curl php-dom php-json php-gd php-mbstring php-mcrypt php-soap php-xml php-zip
+
+# para ubuntu 18.04
+
+apt install php-curl php-dom php-json php-gd php-mbstring php-soap php-xml php-zip
