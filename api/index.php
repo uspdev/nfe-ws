@@ -1,18 +1,4 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: authorization');
-
-if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
-    echo 'OK';
-    exit;
-}
-if (!isset($_SERVER['PHP_AUTH_USER'])) {
-    header('HTTP/1.0 401 Unauthorized');
-    header('WWW-Authenticate: Basic realm="use this hash key to encode"');
-    echo 'Você deve digitar um login e senha válidos para acessar este recurso\n';
-    exit;
-}
 
 // Aparecerá na resposta referente a sefaz
 define('VERSAO', 'v2.0.6');
@@ -31,12 +17,28 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 //Flight::set('flight.log_errors', true);
 
+// Esta rota não precisa de autenticação
 Flight::route('GET /', function () {
     readfile('../lib/index.tpl');
 
 });
 
 Flight::route('*', function () {
+
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: authorization');
+
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+        echo 'OK';
+        exit;
+    }
+    if (!isset($_SERVER['PHP_AUTH_USER'])) {
+        header('HTTP/1.0 401 Unauthorized');
+        header('WWW-Authenticate: Basic realm="use this hash key to encode"');
+        echo 'Você deve digitar um login e senha válidos para acessar este recurso\n';
+        exit;
+    }
 
     $c = new Config;
 
@@ -60,6 +62,10 @@ Flight::route('*', function () {
     }
 
     return true;
+});
+
+Flight::route('GET /status', function() {
+    echo 'status';
 });
 
 Flight::route('GET /@tipo:[a-z]+/@file', function ($tipo, $file) {
@@ -106,7 +112,6 @@ Flight::route('POST /xml', function () {
     $res = array(); // nao pode usar [] no php5.3 que está no delos
     $res['status'] = array();
     $res['url'] = array();
-
 
     // tem de vir o XML ou a chave para continuar
     // posteriormente podemos aceitar upload de arquivo.
@@ -157,7 +162,7 @@ Flight::route('POST /xml', function () {
 
         if ($res['xml']['url']) {
             $res['url']['xml'] = $res['xml']['url'];
-            unset ($res['xml']['url']);
+            unset($res['xml']['url']);
         }
 
         // começamos sempre pela chave
@@ -212,4 +217,3 @@ Flight::route('POST /xml', function () {
 });
 
 Flight::start();
-?>
