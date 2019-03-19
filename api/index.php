@@ -65,7 +65,22 @@ Flight::route('*', function () {
 });
 
 Flight::route('GET /status', function() {
-    echo 'status';
+    echo 'status<br>';
+    $c = new Config();
+    $cert = file_get_contents($c->certFile);
+    $certificado = NFePHP\Common\Certificate::readPfx($cert, $c->certPwd);
+    echo $certificado->getCnpj().' - ';
+    echo $certificado->getCompanyName().'<br>';
+    $validTo = $certificado->getValidTo();
+    echo 'Validade: ' . $validTo->format('d/m/Y').'<br>';
+
+    if ($certificado->isExpired()) {
+        echo "Certificado VENCIDO! Não é possivel mais usá-lo!";
+    } else {
+        echo "Certificado VÁLIDO!";
+    }
+    
+    //print_r($certificado);
 });
 
 Flight::route('GET /@tipo:[a-z]+/@file', function ($tipo, $file) {
