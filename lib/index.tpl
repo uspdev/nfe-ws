@@ -11,10 +11,10 @@ GET -> api/danfe/nome_do_arquivo.pdf<br>
 GET -> api/sefaz/nome_do_arquivo.pdf<br>
 GET -> api/xml/nome_do_arquivo.xml<br><br>
 
-
+<a href="status/">Status</a>
 <br><br>
 <div>
-    ---------------------<br>
+    <hr>
     Contato: kawabata em sc.usp.br
 </div>
 </body>
