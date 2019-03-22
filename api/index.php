@@ -64,22 +64,22 @@ Flight::route('*', function () {
     return true;
 });
 
-Flight::route('GET /status', function() {
+Flight::route('GET /status', function () {
     echo 'status<br>';
     $c = new Config();
     $cert = file_get_contents($c->certFile);
     $certificado = NFePHP\Common\Certificate::readPfx($cert, $c->certPwd);
-    echo $certificado->getCnpj().' - ';
-    echo $certificado->getCompanyName().'<br>';
+    echo $certificado->getCnpj() . ' - ';
+    echo $certificado->getCompanyName() . '<br>';
     $validTo = $certificado->getValidTo();
-    echo 'Validade: ' . $validTo->format('d/m/Y').'<br>';
+    echo 'Validade: ' . $validTo->format('d/m/Y') . '<br>';
 
     if ($certificado->isExpired()) {
         echo "Certificado VENCIDO! Não é possivel mais usá-lo!";
     } else {
         echo "Certificado VÁLIDO!";
     }
-    
+
     //print_r($certificado);
 });
 
@@ -160,7 +160,6 @@ Flight::route('POST /xml', function () {
     // se vier o xml
     if (!empty($_POST['xml'])) {
         $nfe = new nfe_ws();
-        $prot = new Protocolo();
 
         $nfe_xml = $_POST['xml'];
 
@@ -183,41 +182,48 @@ Flight::route('POST /xml', function () {
         // começamos sempre pela chave
         $res['chave'] = $nfe->retornaChave();
 
-        // pega o protocolo de consulta da sefaz
-        $prot = $prot->consulta($res['chave']);
-        if ($prot['url']) {
-            $res['url']['proto'] = $prot['url'];
-            unset($prot['url']);
-        }
+        try {
+            $prot = new Protocolo();
+        } catch (Exception $e) {
 
-        // se está cancelada, vamos anexar o protocolo de cancelamento
-        if ($prot['cStat'] == '101') {
-            try {
-                $nfe_xml_cancelada = Complements::cancelRegister($nfe_xml, $prot['raw']);
-                $nfe->import($nfe_xml_cancelada); // salva a versao cancelada do XML
-            } catch (Exception $e) {
-                $prot['Registro do Cancelamento'] = "Erro: " . $e->getMessage();
+        }
+        if (!empty($prot)) {
+            // pega o protocolo de consulta da sefaz
+            $prot = $prot->consulta($res['chave']);
+            if ($prot['url']) {
+                $res['url']['proto'] = $prot['url'];
+                unset($prot['url']);
             }
+
+            // se está cancelada, vamos anexar o protocolo de cancelamento
+            if ($prot['cStat'] == '101') {
+                try {
+                    $nfe_xml_cancelada = Complements::cancelRegister($nfe_xml, $prot['raw']);
+                    $nfe->import($nfe_xml_cancelada); // salva a versao cancelada do XML
+                } catch (Exception $e) {
+                    $prot['Registro do Cancelamento'] = "Erro: " . $e->getMessage();
+                }
+            }
+            $res['prot'] = $prot;
+
+            // vamos gerar o relatório da sefaz se o protocolo permitir
+            if ($prot['status'] == 'ok') {
+                $sefaz['age'] = $prot['age'];
+                $sefaz['cStat'] = $prot['cStat'];
+                $sefaz['xMotivo'] = $prot['xMotivo'];
+                $sefaz['dhConsulta'] = $prot['dhConsulta'];
+                $sefaz['tpAmb'] = $prot['tpAmb'];
+                $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
+
+                $relat = $nfe->geraRelatorioSefaz($prot);
+                $res['url']['sefaz'] = $relat['url'];
+
+            } else {
+                $sefaz['status'] = 'Não disponível';
+                $sefaz['info'] = 'Como há problemas no protocolo, não foi possível gerar relatório de consulta à Sefaz.';
+            }
+            $res['sefaz'] = $sefaz;
         }
-        $res['prot'] = $prot;
-
-        // vamos gerar o relatório da sefaz se o protocolo permitir
-        if ($prot['status'] == 'ok') {
-            $sefaz['age'] = $prot['age'];
-            $sefaz['cStat'] = $prot['cStat'];
-            $sefaz['xMotivo'] = $prot['xMotivo'];
-            $sefaz['dhConsulta'] = $prot['dhConsulta'];
-            $sefaz['tpAmb'] = $prot['tpAmb'];
-            $sefaz['versao'] = 'uspdev/NFE-WS ' . VERSAO;
-
-            $relat = $nfe->geraRelatorioSefaz($prot);
-            $res['url']['sefaz'] = $relat['url'];
-
-        } else {
-            $sefaz['status'] = 'Não disponível';
-            $sefaz['info'] = 'Como há problemas no protocolo, não foi possível gerar relatório de consulta à Sefaz.';
-        }
-        $res['sefaz'] = $sefaz;
 
         // vamos gerar a danfe aqui
         $danfe = $nfe->geraDanfe();
