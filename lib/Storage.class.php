@@ -86,8 +86,11 @@ class Storage
             1 => 'Normal',
             2 => 'Contingência FS',
             3 => 'Contingência SCAN',
-            4 => 'Contingência DPEC',
-            5 => 'Contingência FS-DA');
+            4 => 'Contingência EPEC',
+            5 => 'Contingência FS-DA',
+            6 => 'Contingência SVC-AN',
+            7 => 'Contingência SVC-RS',
+        );
 
         return $tpEmis[$id];
     }
