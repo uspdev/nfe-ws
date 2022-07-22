@@ -15,11 +15,11 @@ class nfe_ws extends Danfe
     protected $chNFe;
     public $prot;
 
-    function __construct()
+    function __construct($xml)
     {
         $this->c = new Config();
         $this->local = $this->c->local;
-        parent::__construct();
+        parent::__construct($xml);
     }
 
     /*
@@ -322,7 +322,7 @@ class nfe_ws extends Danfe
             $flagVTT = $flagVTT || strpos(strtolower(trim($textoAdic)), 'vl');
             $flagVTT = $flagVTT && strpos(strtolower(trim($textoAdic)), 'aprox');
             $flagVTT = $flagVTT && (strpos(strtolower(trim($textoAdic)), 'trib') ||
-                    strpos(strtolower(trim($textoAdic)), 'imp'));
+                strpos(strtolower(trim($textoAdic)), 'imp'));
             $vTotTrib = $this->pSimpleGetValue($this->ICMSTot, 'vTotTrib');
             if ($vTotTrib != '' && !$flagVTT) {
                 $textoAdic .= "\n Valor Aproximado dos Tributos : R$ " . number_format($vTotTrib, 2, ",", ".");
@@ -464,7 +464,7 @@ class nfe_ws extends Danfe
         }
 
         $tpl->dhConsulta = $this->prot['dhConsulta'];
-        $tpl->infoSistema = 'Sistema DELOS/NFE '.VERSAO;
+        $tpl->infoSistema = 'Sistema DELOS/NFE ' . VERSAO;
 
         $html = $tpl->parse();
         // Aqui termina a geração do HTML
@@ -577,6 +577,37 @@ class nfe_ws extends Danfe
                 return '';
             }
         }
+    }
 
+    /**
+     * pSimpleGetValue
+     * copiado em 7/22, por Masaki,de https://github.com/nfephp-org/nfephp/blob/master/libs/Extras/CommonNFePHP.class.php
+     * Extrai o valor do node DOM
+     *
+     * @param  object                                        $theObj          Instancia de DOMDocument ou DOMElement
+     * @param  string                                        $keyName         identificador da TAG do xml
+     * @param  string                                        $extraTextBefore prefixo do retorno
+     * @param  string extraTextAfter sufixo do retorno
+     * @param  number itemNum numero do item a ser retornado
+     * @return string
+     */
+    protected function pSimpleGetValue($theObj, $keyName, $extraTextBefore = '', $extraTextAfter = '', $itemNum = 0)
+    {
+        if (empty($theObj)) {
+            return '';
+        }
+
+        //if (!($theObj instanceof DOMDocument) && !($theObj instanceof DOMElement)) {
+        //    throw new nfephpException(
+        //        "Metodo CommonNFePHP::pSimpleGetValue() "
+        //        . "com parametro do objeto invalido, verifique!"
+        //    );
+        //}
+
+        $vct = $theObj->getElementsByTagName($keyName)->item($itemNum);
+        if (isset($vct)) {
+            return $extraTextBefore . trim($vct->nodeValue) . $extraTextAfter;
+        }
+        return '';
     }
 }

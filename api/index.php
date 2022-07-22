@@ -1,7 +1,7 @@
 <?php
 
 // Aparecerá na resposta referente a sefaz
-define('VERSAO', 'v2.0.6');
+define('VERSAO', 'v2.0.7');
 
 require_once '../config.php';
 require_once '../vendor/autoload.php';
@@ -138,30 +138,12 @@ Flight::route('POST /xml', function () {
         exit();
     }
 
-    // se vier a chave
-    if (!empty($_POST['chave'])) {
-        $prot = new Protocolo();
-        if (!$chave = nfe_ws::validaChNFe($_POST['chave'])) {
-            $res['status'] = 'Chave incorreta ' . strlen($_POST['chave']);
-            echo json_encode($res);
-            exit();
-        }
-        $res['chave'] = $chave;
-        $res['prot'] = $prot->consulta($res['chave']);
-
-        $res['url']['proto'] = $res['prot']['url'];
-        unset($res['prot']['url']);
-
-        $res['xml']['status'] = 'sem xml';
-        echo json_encode($res);
-        exit;
-    }
-
     // se vier o xml
     if (!empty($_POST['xml'])) {
-        $nfe = new nfe_ws();
-
         $nfe_xml = $_POST['xml'];
+
+        $nfe = new nfe_ws($nfe_xml);
+
 
         $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
 
@@ -232,6 +214,25 @@ Flight::route('POST /xml', function () {
         $res['nfe'] = $nfe->detalhes();
 
         $res['status'] = 'ok';
+        echo json_encode($res);
+        exit;
+    }
+
+    // se vier a chave
+    if (!empty($_POST['chave'])) {
+        $prot = new Protocolo();
+        if (!$chave = nfe_ws::validaChNFe($_POST['chave'])) {
+            $res['status'] = 'Chave incorreta ' . strlen($_POST['chave']);
+            echo json_encode($res);
+            exit();
+        }
+        $res['chave'] = $chave;
+        $res['prot'] = $prot->consulta($res['chave']);
+
+        $res['url']['proto'] = $res['prot']['url'];
+        unset($res['prot']['url']);
+
+        $res['xml']['status'] = 'sem xml';
         echo json_encode($res);
         exit;
     }

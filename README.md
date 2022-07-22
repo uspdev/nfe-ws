@@ -3,16 +3,27 @@ Webservice para validação de NFEs
 
 Aplicação e webservice utilizado para realizar consultas relacionadas à nota fiscal eletrônica - NFE:
 
-- Consultar a validade junto à SEFAZ;
 - Verificar a estrutura do XML;
+- Consultar a validade junto à SEFAZ e gerar relatório
 - Gerar DANFE
 
 É composto por uma api de webservice e uma aplicação simples para testes.
 
-Esta api É utilizada pelo sistema delos, para armazenamento de notas fiscais eletrônicas 
-em cumprimento à legislação específica.
+Esta api É utilizada pelo sistema delos, para armazenamento de notas fiscais eletrônicas, em cumprimento à legislação específica.
 
 A autenticação é por http basic mas é gerenciado pelo próprio php.
+
+### Atualizações
+
+v2.0.7 - 22/07/2022
+
+ - composer update
+ - adicionado manualmente método removido durante update
+ - priorizando envio de xml ao invés de chave
+ - testado em php 7.4
+ - não atualizado sped-da pois precisa ajustar funções legadas
+
+v2.0.6
 
 ### Bibliotecas ###
 

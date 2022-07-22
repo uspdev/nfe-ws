@@ -102,11 +102,13 @@ class Protocolo extends Common
         // esta primeira data é a da consulta do protocolo
         // num retorno não veio dhConsulta, então vamos testar
         if (!empty($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue)) {
-            $ret['dhConsulta'] = date("d/m/Y - H:i:s",
-                $this->pConvertTime($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue));
+            $ret['dhConsulta'] = date(
+                "d/m/Y - H:i:s",
+                Tools::pConvertTime($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue)
+            );
         } else {
             $arq = $this->local . $this->chNFe . '-prot.xml';
-            $ret['dhConsulta'] = date('d/m/Y - H:i:s', filemtime($arq)).' (data do arquivo)';
+            $ret['dhConsulta'] = date('d/m/Y - H:i:s', filemtime($arq)) . ' (data do arquivo)';
         }
 
 
@@ -129,8 +131,10 @@ class Protocolo extends Common
         $ret['eventos'][0]['tpEvento'] = $protNFe->getElementsByTagName('cStat')->item(0)->nodeValue;
         $ret['eventos'][0]['descEvento'] = $protNFe->getElementsByTagName('xMotivo')->item(0)->nodeValue;
         $ret['eventos'][0]['nProt'] = $protNFe->getElementsByTagName('nProt')->item(0)->nodeValue;
-        $ret['eventos'][0]['dhEvento'] = date("d/m/Y - H:i:s",
-            $this->pConvertTime($protNFe->getElementsByTagName('dhRecbto')->item(0)->nodeValue));
+        $ret['eventos'][0]['dhEvento'] = date(
+            "d/m/Y - H:i:s",
+            Tools::pConvertTime($protNFe->getElementsByTagName('dhRecbto')->item(0)->nodeValue)
+        );
 
         $ret['eventos'][0]['digVal'] = $protNFe->getElementsByTagName('digVal')->item(0)->nodeValue;
 
@@ -142,8 +146,10 @@ class Protocolo extends Common
             $ret['eventos'][$i]['descEvento'] = $evento->getElementsByTagName('descEvento')->item(0)->nodeValue;
 
             // pega a data do infEvento e não do retorno
-            $ret['eventos'][$i]['dhEvento'] = date("d/m/Y - H:i:s",
-                $this->pConvertTime($evento->getElementsByTagName('dhEvento')->item(0)->nodeValue));
+            $ret['eventos'][$i]['dhEvento'] = date(
+                "d/m/Y - H:i:s",
+                Tools::pConvertTime($evento->getElementsByTagName('dhEvento')->item(0)->nodeValue)
+            );
 
             // aqui pega o nprot do retEvento e não do infEvento
             $retEvento = $evento->getElementsByTagName('retEvento')->item(0);
