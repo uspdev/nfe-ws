@@ -17,7 +17,7 @@ class Protocolo extends Common
         $this->local = $this->c->local;
 
         $arr = [
-            "atualizacao" => "2018-08-27 10:26:00",
+            "atualizacao" => "2022-07-25 10:26:00",
             "tpAmb" => 1, // producao
             "razaosocial" => "Escola de Engenharia de São Carlos",
             "cnpj" => "63025530002824",

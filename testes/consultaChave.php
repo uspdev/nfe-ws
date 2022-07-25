@@ -11,24 +11,15 @@ use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Common\Complements;
 
-
 $arr = [
-    "atualizacao" => "2016-11-03 18:01:21",
-    "tpAmb" => 2,
+    "atualizacao" => "2022-07-25 10:26:00",
+    "tpAmb" => 1, // producao
     "razaosocial" => "Escola de Engenharia de São Carlos",
     "cnpj" => "63025530002824",
     "siglaUF" => "SP",
-    "schemes" => "PL008i2",
-    "versao" => '3.10',
-    "tokenIBPT" => "AAAAAAA",
-    "CSC" => "GPB0JBWLUR6HWFTVEAS6RJ69GPCROFPBBB8G",
-    "CSCid" => "000001",
-    "proxyConf" => [
-        "proxyIp" => "",
-        "proxyPort" => "",
-        "proxyUser" => "",
-        "proxyPass" => ""
-    ]
+    //"schemes" => "PL008i2",
+    "schemes" => "PL009_V4",
+    "versao" => '4.00'
 ];
 //monta o config.json
 $configJson = json_encode($arr);
@@ -38,11 +29,10 @@ $content = file_get_contents($cfg['cert_file']);
 
 $nfe = file_get_contents('modelo-nfe2.xml');
 
+$chave = '35220705076414000118550010000041501000050223';
+// $chave = '35180310205416000108550000000026171000026174';
 
-$chave = '35180419257637000196550010000646311415652035';
-$chave = '35180310205416000108550000000026171000026174';
-
-$tools = new Tools($configJson, Certificate::readPfx($content, 'masaki2008'));
+$tools = new Tools($configJson, Certificate::readPfx($content, $cfg['cert_pwd']));
 
 use NFePHP\Common\Signer;
 
@@ -68,14 +58,14 @@ echo 'protocol: ' . $protocol . PHP_EOL;
 $digval = $dom->getElementsByTagName('DigestValue')->item(0)->nodeValue;
 echo 'digval: ' . $digval . PHP_EOL;
 //consulta a NFe
-//$response = $tools->sefazConsultaChave($chNFe, $tpAmb);
-//file_put_contents($chNFe.'-prot.xml',$response);
+$response = $tools->sefazConsultaChave($chNFe, $tpAmb);
+file_put_contents($chNFe.'-prot.xml',$response);
 //exit;
 
 
 //echo $response.PHP_EOL;
 
-$response = file_get_contents('35180303846817000173550010000047001010008144-prot.xml');
+$response = file_get_contents($chNFe.'-prot.xml');
 
 $ret = new \DOMDocument('1.0', 'UTF-8');
 $ret->preserveWhiteSpace = false;
