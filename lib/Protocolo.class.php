@@ -32,6 +32,7 @@ class Protocolo extends Common
         $cert = file_get_contents($this->c->certFile);
 
         $this->tools = new NFePHP\NFe\Tools($configJson, Certificate::readPfx($cert, $this->c->certPwd));
+        $this->tools->soap->protocol(6); //SSL_TLSV1_2
     }
 
     public function getChave()
