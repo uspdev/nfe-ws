@@ -86,7 +86,7 @@ class Protocolo extends Common
         }
 
         $ret = array_merge($ret, $this->parse());
-        $ret['url'] = $this->c->baseUrl . 'api/prot/' . $this->chNFe . '-prot.xml';
+        $ret['url'] = $this->c->baseUrl . 'prot/' . $this->chNFe . '-prot.xml';
         $ret['raw'] = $this->prot;
 
         return $ret;

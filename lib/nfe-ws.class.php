@@ -75,7 +75,7 @@ class nfe_ws extends Danfe
         file_put_contents($nfeArq, $this->xml);
         //}
         $this->versao = $this->dom->getElementsByTagName('infNFe')->item(0)->getAttribute('versao');
-        $res['url'] = $this->c->baseUrl . 'api/xml/' . $this->retornaChave() . '-nfe.xml';
+        $res['url'] = $this->c->baseUrl . 'xml/' . $this->retornaChave() . '-nfe.xml';
         $res['import'] = 'Importado com sucesso';
         $res['versao'] = $this->versao;
         $res['status'] = 'ok';
@@ -96,7 +96,7 @@ class nfe_ws extends Danfe
 
         file_put_contents($danfeArq, $pdf);
 
-        $res['url'] = $this->c->baseUrl . 'api/danfe/' . $chave . '-danfe.pdf';
+        $res['url'] = $this->c->baseUrl . 'danfe/' . $chave . '-danfe.pdf';
         $res['status'] = 'ok';
         return $res;
     }
@@ -345,7 +345,7 @@ class nfe_ws extends Danfe
 
         $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
         $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
-        $arq_proto_url = $this->c->baseUrl . 'api/sefaz/' . $this->chNFe . '-prot.pdf';
+        $arq_proto_url = $this->c->baseUrl . 'sefaz/' . $this->chNFe . '-prot.pdf';
 
         // -----------------------------------
         if ($debug) echo 'arq_xml = ' . $arq_xml;
