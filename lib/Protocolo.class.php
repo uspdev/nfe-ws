@@ -2,6 +2,9 @@
 
 use NFePHP\DA\Legacy\Common;
 use NFePHP\Common\Certificate;
+use NFePHP\Common\Soap\SoapCurl;
+use NFePHP\NFe\Tools as NfeTools;
+use NFePHP\NFe\Common\Standardize;
 
 class Protocolo extends Common
 {
@@ -11,7 +14,7 @@ class Protocolo extends Common
     protected $prot;
     protected $c;
 
-    function __construct()
+    public function __construct()
     {
         $this->c = new Config();
         $this->local = $this->c->local;
@@ -24,15 +27,19 @@ class Protocolo extends Common
             "siglaUF" => "SP",
             //"schemes" => "PL008i2",
             "schemes" => "PL009_V4",
-            "versao" => '4.00'
+            "versao" => '4.00',
         ];
         //monta o config.json
         $configJson = json_encode($arr);
         //carrega o conteudo do certificado.
         $cert = file_get_contents($this->c->certFile);
 
-        $this->tools = new NFePHP\NFe\Tools($configJson, Certificate::readPfx($cert, $this->c->certPwd));
-        // $this->tools->soap->protocol(6); //SSL_TLSV1_2
+        $certificate = Certificate::readPfx($cert, $this->c->certPwd);
+        $soap = new SoapCurl($certificate);
+        $soap->httpVersion('1.1');
+
+        $this->tools = new NfeTools($configJson, $certificate);
+        $this->tools->loadSoapClass($soap);
     }
 
     public function getChave()
@@ -49,11 +56,11 @@ class Protocolo extends Common
     }
 
     /*
- * Consulta a chave de NFe na Sefaz
- * Caso esteja no disco não consulta novamente para evitar 'uso indevido'
- * retorna os dados do protocolo, incluindo os eventos
- * todo: tem de dar uma validade no cache do disco ou possibilidade de dar refresh manual
- */
+     * Consulta a chave de NFe na Sefaz
+     * Caso esteja no disco não consulta novamente para evitar 'uso indevido'
+     * retorna os dados do protocolo, incluindo os eventos
+     * todo: tem de dar uma validade no cache do disco ou possibilidade de dar refresh manual
+     */
     public function consulta($chave)
     {
         $maxage = 60 * 10; // caso tenha mais de 10 mins, consulta de novo a sefaz.
@@ -87,7 +94,7 @@ class Protocolo extends Common
 
     /*
      * Retorna em array os dados relevantes de um retorno de consulta de NFe
-    */
+     */
     public function parse()
     {
         $ret = [];
@@ -96,22 +103,26 @@ class Protocolo extends Common
         $cons->formatOutput = false;
         $cons->loadXML($this->prot);
 
+        $stdCl = new Standardize($this->prot);
+        $prot = $stdCl->toArray();
+
+        // tem de ajustar embaixo para $prot. feito somente uma parte
+
         // vamos pegar a situação atual
-        $ret['cStat'] = $cons->getElementsByTagName('cStat')->item(0)->nodeValue;
-        $ret['xMotivo'] = $cons->getElementsByTagName('xMotivo')->item(0)->nodeValue;
-        $ret['tpAmb'] = $cons->getElementsByTagName('tpAmb')->item(0)->nodeValue;
+        $ret['cStat'] = $prot['cStat'];
+        $ret['xMotivo'] = $prot['xMotivo'];
+        $ret['tpAmb'] = $prot['tpAmb'];
         // esta primeira data é a da consulta do protocolo
         // num retorno não veio dhConsulta, então vamos testar
-        if (!empty($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue)) {
+        if (!empty($prot['dhRecbto'])) {
             $ret['dhConsulta'] = date(
                 "d/m/Y - H:i:s",
-                Tools::pConvertTime($cons->getElementsByTagName('dhRecbto')->item(0)->nodeValue)
+                Tools::pConvertTime($prot['dhRecbto'])
             );
         } else {
             $arq = $this->local . $this->chNFe . '-prot.xml';
             $ret['dhConsulta'] = date('d/m/Y - H:i:s', filemtime($arq)) . ' (data do arquivo)';
         }
-
 
         // verifica o cStat do retorno
         if ($ret['cStat'] == 526) {
@@ -125,7 +136,6 @@ class Protocolo extends Common
             return $ret;
         }
         $ret['status'] = 'ok';
-
 
         // vamos gerar o array de eventos, começando pelo protocolo de autorização
         $protNFe = $cons->getElementsByTagName('protNFe')->item(0);
