@@ -21,6 +21,20 @@ $cfg['pwdFile'] = __DIR__ . '/local/passwd.txt';
 // corresponde à url completa do webservice
 $cfg['baseUrl'] = 'http://servidor/nfe-ws/';
 
+// Se true vamos apresentar alguns erros de debug
+$cfg['debug'] = false;
+
+// cofig no nfe-php
+$nfeConfig = [
+    "atualizacao" => "2022-07-25 10:26:00",
+    "tpAmb" => 1, // producao
+    "razaosocial" => "Escola de Engenharia de São Carlos",
+    "cnpj" => "63025530002824",
+    "siglaUF" => "SP",
+    "schemes" => "PL009_V4",
+    "versao" => '4.00'
+];
+
 // o apache deve ser configurado para apontar para a pasta api
 /*
 Alias /nfe-ws/api /home/sistemas/nfe-ws/api

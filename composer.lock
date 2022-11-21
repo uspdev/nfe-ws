@@ -166,16 +166,16 @@
         },
         {
             "name": "nfephp-org/sped-common",
-            "version": "v5.1.3",
+            "version": "v5.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-common.git",
-                "reference": "eec2d219a0910d79f59248bb9ee4d710bdab1a8b"
+                "reference": "57437eb3c568577c0781cf58e732a4e417b393b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-common/zipball/eec2d219a0910d79f59248bb9ee4d710bdab1a8b",
-                "reference": "eec2d219a0910d79f59248bb9ee4d710bdab1a8b",
+                "url": "https://api.github.com/repos/nfephp-org/sped-common/zipball/57437eb3c568577c0781cf58e732a4e417b393b0",
+                "reference": "57437eb3c568577c0781cf58e732a4e417b393b0",
                 "shasum": ""
             },
             "require": {
@@ -239,9 +239,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nfephp-org/sped-common/issues",
-                "source": "https://github.com/nfephp-org/sped-common/tree/v5.1.3"
+                "source": "https://github.com/nfephp-org/sped-common/tree/v5.1.4"
             },
-            "time": "2022-06-24T15:22:05+00:00"
+            "time": "2022-08-22T15:02:53+00:00"
         },
         {
             "name": "nfephp-org/sped-da",
@@ -400,16 +400,16 @@
         },
         {
             "name": "nfephp-org/sped-nfe",
-            "version": "v5.1.5",
+            "version": "v5.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-nfe.git",
-                "reference": "f5b40ad5b06ec1a744dc6649cdbaaf483b8a12e5"
+                "reference": "ada1bec5cef9eef9c804626ec1b9e2ada717a2e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-nfe/zipball/f5b40ad5b06ec1a744dc6649cdbaaf483b8a12e5",
-                "reference": "f5b40ad5b06ec1a744dc6649cdbaaf483b8a12e5",
+                "url": "https://api.github.com/repos/nfephp-org/sped-nfe/zipball/ada1bec5cef9eef9c804626ec1b9e2ada717a2e1",
+                "reference": "ada1bec5cef9eef9c804626ec1b9e2ada717a2e1",
                 "shasum": ""
             },
             "require": {
@@ -476,9 +476,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nfephp-org/sped-nfe/issues",
-                "source": "https://github.com/nfephp-org/sped-nfe/tree/v5.1.5"
+                "source": "https://github.com/nfephp-org/sped-nfe/tree/v5.1.7"
             },
-            "time": "2022-07-01T18:58:36+00:00"
+            "time": "2022-10-21T19:32:41+00:00"
         },
         {
             "name": "psr/log",
@@ -741,16 +741,16 @@
         },
         {
             "name": "tecnickcom/tcpdf",
-            "version": "6.4.4",
+            "version": "6.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320"
+                "reference": "cc54c1503685e618b23922f53635f46e87653662"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/42cd0f9786af7e5db4fcedaa66f717b0d0032320",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/cc54c1503685e618b23922f53635f46e87653662",
+                "reference": "cc54c1503685e618b23922f53635f46e87653662",
                 "shasum": ""
             },
             "require": {
@@ -801,7 +801,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.4.4"
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.5.0"
             },
             "funding": [
                 {
@@ -809,7 +809,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2021-12-31T08:39:24+00:00"
+            "time": "2022-08-12T07:50:54+00:00"
         }
     ],
     "packages-dev": [],
@@ -822,5 +822,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.3.0"
 }

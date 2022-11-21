@@ -144,7 +144,6 @@ Flight::route('POST /xml', function () {
 
         $nfe = new nfe_ws($nfe_xml);
 
-
         $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
 
         // caso tenha um erro crítico vamos parar o processo
@@ -167,7 +166,11 @@ Flight::route('POST /xml', function () {
         try {
             $prot = new Protocolo();
         } catch (Exception $e) {
-
+            if ($cfg['debug']) {
+                echo 'Caught exception: ', $e->getMessage(), "\n";
+            } else {
+                die('Excessão no protocolo.');
+            }
         }
         if (!empty($prot)) {
             // pega o protocolo de consulta da sefaz

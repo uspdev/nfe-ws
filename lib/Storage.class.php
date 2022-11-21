@@ -33,6 +33,7 @@ class Storage
             2 => 'Operação não presencial, pela Internet',
             3 => 'Operação não presencial, Teleatendimento',
             4 => 'NFC-e em operação com entrega em domicílio',
+            5 => 'Operação presencial, fora do estabelecimento',
             9 => 'Operação não presencial, outros');
         return $indPres[$id];
     }
