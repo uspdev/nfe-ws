@@ -1,13 +1,14 @@
 # nfe-ws
+
 Webservice para validação de NFEs
 
-Aplicação e webservice utilizado para realizar consultas relacionadas à nota fiscal eletrônica - NFE:
+Para utilizar o webservice utilize [nfe-ws-consumer](https://github.com/uspdev/nfe-ws-consumer).
+
+Webservice utilizado para realizar consultas relacionadas à nota fiscal eletrônica - NFE:
 
 - Verificar a estrutura do XML;
 - Consultar a validade junto à SEFAZ e gerar relatório
 - Gerar DANFE
-
-É composto por uma api de webservice e uma aplicação simples para testes.
 
 Esta api É utilizada pelo sistema delos, para armazenamento de notas fiscais eletrônicas, em cumprimento à legislação específica.
 

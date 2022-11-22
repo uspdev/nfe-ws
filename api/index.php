@@ -1,7 +1,7 @@
 <?php
 
 // Aparecerá na resposta referente a sefaz
-define('VERSAO', 'v2.0.7');
+define('VERSAO', '2.0.8');
 
 require_once '../config.php';
 require_once '../vendor/autoload.php';
