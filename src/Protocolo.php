@@ -86,6 +86,37 @@ class Protocolo extends Common
         return $ret;
     }
 
+    /**
+     * Consulta a SEFAZ capturando excecoes e extraindo a URL do arquivo de protocolo
+     *
+     * @param string $chave
+     * @return array [ 'prot' => array, 'url' => ?string ]
+     */
+    public function consultaComUrl(string $chave): array
+    {
+        try {
+            $prot = $this->consulta($chave);
+            $url = null;
+            if (!empty($prot['url'])) {
+                $url = $prot['url'];
+                unset($prot['url']);
+            }
+            return [
+                'prot' => $prot,
+                'url'  => $url,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'prot' => [
+                    'status'  => 'erro',
+                    'xMotivo' => 'Falha ao consultar SEFAZ: ' . $e->getMessage(),
+                    'erro'    => $e->getMessage(),
+                ],
+                'url'  => null,
+            ];
+        }
+    }
+
     /*
      * Retorna em array os dados relevantes de um retorno de consulta de NFe
      */

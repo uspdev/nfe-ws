@@ -2,8 +2,6 @@
 
 namespace Uspdev\NfeWs;
 
-use NFePHP\NFe\Complements;
-
 class ApiController
 {
     private Config $config;
@@ -152,11 +150,6 @@ class ApiController
      */
     public function processXml(): void
     {
-        $res = [
-            'status' => [],
-            'url'    => [],
-        ];
-
         $xml = $_POST['xml'] ?? null;
         $chave = $_POST['chave'] ?? null;
 
@@ -173,162 +166,16 @@ class ApiController
         }
 
         if (empty($xml) && empty($chave)) {
-            $res['status'] = 'Erro: sem dados';
-            $this->jsonResponse($res);
+            $this->jsonResponse(['status' => 'Erro: sem dados', 'url' => []]);
         }
 
         if (!empty($xml)) {
-            $this->processaEnvioXml($xml, $res);
+            $this->jsonResponse(NfeWs::processarEnvioXml($xml));
         }
 
         if (!empty($chave)) {
-            $this->processaConsultaChave($chave, $res);
+            $this->jsonResponse(NfeWs::processarConsultaChave($chave));
         }
-    }
-
-    /**
-     * Processa recebimento de XML completo
-     */
-    private function processaEnvioXml(string $nfe_xml, array $res): void
-    {
-        $dom = new \DOMDocument('1.0', 'utf-8');
-        $dom->preserveWhiteSpace = true;
-        $dom->formatOutput = false;
-        if (!@$dom->loadXML($nfe_xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG) || $dom->getElementsByTagName('infNFe')->length === 0) {
-            $res['status'] = 'Erro ao processar XML: Não tem infNFe ou XML mal formado';
-            $res['xml'] = [
-                'status'    => 'stop',
-                'estrutura' => 'Erro: Não tem infNFe ou XML mal formado',
-            ];
-            $this->jsonResponse($res);
-        }
-
-        try {
-            $nfe = new NfeWs($nfe_xml);
-        } catch (\Throwable $e) {
-            $res['status'] = 'Erro ao processar XML: ' . $e->getMessage();
-            $res['xml'] = [
-                'status'    => 'stop',
-                'estrutura' => 'Erro ao processar XML: ' . $e->getMessage(),
-            ];
-            $this->jsonResponse($res);
-        }
-
-        $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
-
-        if ($res['xml']['status'] === 'stop') {
-            $this->jsonResponse($res);
-        }
-
-        $res['xml'] = array_merge($res['xml'], $nfe->import($nfe_xml));
-        if (!empty($res['xml']['url'])) {
-            $res['url']['xml'] = $res['xml']['url'];
-            unset($res['xml']['url']);
-        }
-
-        $res['chave'] = $nfe->retornaChave();
-
-        $prot = null;
-        try {
-            $protocoloObj = new Protocolo();
-            $prot = $protocoloObj->consulta($res['chave']);
-        } catch (\Throwable $e) {
-            $prot = [
-                'status'  => 'erro',
-                'xMotivo' => 'Falha ao consultar SEFAZ: ' . $e->getMessage(),
-                'erro'    => $e->getMessage(),
-            ];
-        }
-
-        if (!empty($prot)) {
-            if (!empty($prot['url'])) {
-                $res['url']['proto'] = $prot['url'];
-                unset($prot['url']);
-            }
-
-            if (($prot['cStat'] ?? '') == '101') {
-                try {
-                    $nfe_xml_cancelada = Complements::cancelRegister($nfe_xml, $prot['raw'] ?? '');
-                    $nfe->import($nfe_xml_cancelada);
-                } catch (\Throwable $e) {
-                    $prot['Registro do Cancelamento'] = 'Erro: ' . $e->getMessage();
-                }
-            }
-            $res['prot'] = $prot;
-
-            if (($prot['status'] ?? '') === 'ok') {
-                $sefaz = [
-                    'age'        => $prot['age'] ?? 0,
-                    'cStat'      => $prot['cStat'] ?? '',
-                    'xMotivo'    => $prot['xMotivo'] ?? '',
-                    'dhConsulta' => $prot['dhConsulta'] ?? '',
-                    'tpAmb'      => $prot['tpAmb'] ?? '',
-                    'versao'     => 'uspdev/NFE-WS ' . (defined('VERSAO') ? VERSAO : '2.0.8'),
-                ];
-                try {
-                    $relat = $nfe->geraRelatorioSefaz($prot);
-                    $res['url']['sefaz'] = $relat['url'];
-                } catch (\Throwable $e) {
-                    $sefaz['erro_relatorio'] = $e->getMessage();
-                }
-            } else {
-                $sefaz = [
-                    'status' => 'Não disponível',
-                    'info'   => $prot['xMotivo'] ?? 'Como há problemas no protocolo, não foi possível gerar relatório de consulta à Sefaz.',
-                ];
-            }
-            $res['sefaz'] = $sefaz;
-        }
-
-        try {
-            $danfe = $nfe->geraDanfe();
-            $res['url']['danfe'] = $danfe['url'];
-        } catch (\Throwable $e) {
-            $res['danfe_erro'] = 'Erro ao gerar DANFE: ' . $e->getMessage();
-        }
-
-        try {
-            $res['nfe'] = $nfe->detalhes();
-        } catch (\Throwable $e) {
-            $res['detalhes_erro'] = 'Erro ao obter detalhes: ' . $e->getMessage();
-        }
-
-        $res['status'] = 'ok';
-
-        $this->jsonResponse($res);
-    }
-
-    /**
-     * Processa consulta com chave da NFe
-     */
-    private function processaConsultaChave(string $chaveInput, array $res): void
-    {
-        if (!$chave = NfeWs::validaChNFe($chaveInput)) {
-            $res['status'] = 'Chave incorreta ' . strlen($chaveInput);
-            $this->jsonResponse($res);
-        }
-
-        $res['chave'] = $chave;
-
-        try {
-            $protocoloObj = new Protocolo();
-            $prot = $protocoloObj->consulta($res['chave']);
-            if (!empty($prot['url'])) {
-                $res['url']['proto'] = $prot['url'];
-                unset($prot['url']);
-            }
-            $res['prot'] = $prot;
-        } catch (\Throwable $e) {
-            $res['prot'] = [
-                'status'  => 'erro',
-                'xMotivo' => 'Falha ao consultar SEFAZ: ' . $e->getMessage(),
-                'erro'    => $e->getMessage(),
-            ];
-        }
-
-        $res['xml']['status'] = 'sem xml';
-        $res['status'] = 'ok';
-        $this->jsonResponse($res);
     }
 
     /**

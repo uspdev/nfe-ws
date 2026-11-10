@@ -6,6 +6,7 @@ use DOMDocument;
 use TCPDF;
 use NFePHP\Common\Signer;
 use NFePHP\DA\Legacy\Common;
+use NFePHP\NFe\Complements;
 
 // para danfe
 use NFePHP\DA\NFe\Danfe;
@@ -214,6 +215,149 @@ class NfeWs extends Danfe
             return false;
         }
         return $chNFe;
+    }
+
+    /**
+     * Processa o envio de um XML de NF-e completo:
+     * Valida estrutura basica e schema, importa os dados, consulta a SEFAZ via Protocolo,
+     * registra cancelamento se aplicavel e gera os arquivos DANFE e relatorio SEFAZ.
+     *
+     * @param string $nfe_xml
+     * @return array
+     */
+    public static function processarEnvioXml(string $nfe_xml): array
+    {
+        $res = [
+            'status' => [],
+            'url'    => [],
+        ];
+
+        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom->preserveWhiteSpace = true;
+        $dom->formatOutput = false;
+        if (!@$dom->loadXML($nfe_xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG) || $dom->getElementsByTagName('infNFe')->length === 0) {
+            $res['status'] = 'Erro ao processar XML: Não tem infNFe ou XML mal formado';
+            $res['xml'] = [
+                'status'    => 'stop',
+                'estrutura' => 'Erro: Não tem infNFe ou XML mal formado',
+            ];
+            return $res;
+        }
+
+        try {
+            $nfe = new self($nfe_xml);
+        } catch (\Throwable $e) {
+            $res['status'] = 'Erro ao processar XML: ' . $e->getMessage();
+            $res['xml'] = [
+                'status'    => 'stop',
+                'estrutura' => 'Erro ao processar XML: ' . $e->getMessage(),
+            ];
+            return $res;
+        }
+
+        $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
+
+        if (($res['xml']['status'] ?? '') === 'stop') {
+            return $res;
+        }
+
+        $res['xml'] = array_merge($res['xml'], $nfe->import($nfe_xml));
+        if (!empty($res['xml']['url'])) {
+            $res['url']['xml'] = $res['xml']['url'];
+            unset($res['xml']['url']);
+        }
+
+        $res['chave'] = $nfe->retornaChave();
+
+        $protocoloObj = new Protocolo();
+        $consProt = $protocoloObj->consultaComUrl($res['chave']);
+        $prot = $consProt['prot'];
+        if (!empty($consProt['url'])) {
+            $res['url']['proto'] = $consProt['url'];
+        }
+
+        if (!empty($prot)) {
+            if (($prot['cStat'] ?? '') == '101') {
+                try {
+                    $nfe_xml_cancelada = Complements::cancelRegister($nfe_xml, $prot['raw'] ?? '');
+                    $nfe->import($nfe_xml_cancelada);
+                } catch (\Throwable $e) {
+                    $prot['Registro do Cancelamento'] = 'Erro: ' . $e->getMessage();
+                }
+            }
+            $res['prot'] = $prot;
+
+            if (($prot['status'] ?? '') === 'ok') {
+                $sefaz = [
+                    'age'        => $prot['age'] ?? 0,
+                    'cStat'      => $prot['cStat'] ?? '',
+                    'xMotivo'    => $prot['xMotivo'] ?? '',
+                    'dhConsulta' => $prot['dhConsulta'] ?? '',
+                    'tpAmb'      => $prot['tpAmb'] ?? '',
+                    'versao'     => 'uspdev/NFE-WS ' . (defined('VERSAO') ? VERSAO : '2.0.8'),
+                ];
+                try {
+                    $relat = $nfe->geraRelatorioSefaz($prot);
+                    $res['url']['sefaz'] = $relat['url'];
+                } catch (\Throwable $e) {
+                    $sefaz['erro_relatorio'] = $e->getMessage();
+                }
+            } else {
+                $sefaz = [
+                    'status' => 'Não disponível',
+                    'info'   => $prot['xMotivo'] ?? 'Como há problemas no protocolo, não foi possível gerar relatório de consulta à Sefaz.',
+                ];
+            }
+            $res['sefaz'] = $sefaz;
+        }
+
+        try {
+            $danfe = $nfe->geraDanfe();
+            $res['url']['danfe'] = $danfe['url'];
+        } catch (\Throwable $e) {
+            $res['danfe_erro'] = 'Erro ao gerar DANFE: ' . $e->getMessage();
+        }
+
+        try {
+            $res['nfe'] = $nfe->detalhes();
+        } catch (\Throwable $e) {
+            $res['detalhes_erro'] = 'Erro ao obter detalhes: ' . $e->getMessage();
+        }
+
+        $res['status'] = 'ok';
+        return $res;
+    }
+
+    /**
+     * Processa consulta de NF-e diretamente pela chave de 44 dígitos
+     *
+     * @param string $chaveInput
+     * @return array
+     */
+    public static function processarConsultaChave(string $chaveInput): array
+    {
+        $res = [
+            'status' => [],
+            'url'    => [],
+        ];
+
+        if (!$chave = self::validaChNFe($chaveInput)) {
+            $res['status'] = 'Chave incorreta ' . strlen($chaveInput);
+            return $res;
+        }
+
+        $res['chave'] = $chave;
+
+        $protocoloObj = new Protocolo();
+        $consProt = $protocoloObj->consultaComUrl($res['chave']);
+        $res['prot'] = $consProt['prot'];
+        if (!empty($consProt['url'])) {
+            $res['url']['proto'] = $consProt['url'];
+        }
+
+        $res['xml']['status'] = 'sem xml';
+        $res['status'] = 'ok';
+        return $res;
     }
 
     /*
