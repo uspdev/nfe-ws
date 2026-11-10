@@ -24,18 +24,7 @@ class Protocolo extends Common
         $this->c = new Config();
         $this->local = $this->c->local;
 
-        $arr = [
-            "atualizacao" => "2022-07-25 10:26:00",
-            "tpAmb" => 1, // producao
-            "razaosocial" => "Escola de Engenharia de São Carlos",
-            "cnpj" => "63025530002824",
-            "siglaUF" => "SP",
-            //"schemes" => "PL008i2",
-            "schemes" => "PL009_V4",
-            "versao" => '4.00',
-        ];
-        //monta o config.json
-        $configJson = json_encode($arr);
+        $configJson = json_encode($this->c->nfeConfig);
 
         $certificate = $this->c->getCertificate();
         $soap = new SoapCurl($certificate);

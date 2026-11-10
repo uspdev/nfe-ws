@@ -104,7 +104,9 @@ class nfe_ws extends Danfe
         }
 
         $danfe = new Danfe($this->xml, 'P', 'A4', '', 'I', '');
-        $id = $danfe->montaDANFE();
+        if (method_exists($danfe, 'montaDANFE')) {
+            $danfe->montaDANFE();
+        }
         $pdf = $danfe->render();
 
         file_put_contents($danfeArq, $pdf);
@@ -299,18 +301,25 @@ class nfe_ws extends Danfe
                 ' - ' . $txRetxBairro . ' ' . $txRetxMun . ' - ' . $txRetUF . "\r\n";
         }
         //informações adicionais
-        $textoAdic .= $this->pGeraInformacoesDasNotasReferenciadas();
+        if (method_exists(parent::class, 'pGeraInformacoesDasNotasReferenciadas')) {
+            $textoAdic .= parent::pGeraInformacoesDasNotasReferenciadas();
+        }
         if (isset($this->infAdic)) {
             $i = 0;
             if ($textoAdic != '') {
                 $textoAdic .= ". \r\n";
             }
-            $textoAdic .= !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
-                'Inf. Contribuinte: ' .
-                trim($this->pAnfavea($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue)) : '';
-            $infPedido = $this->pGeraInformacoesDaTagCompra();
-            if ($infPedido != "") {
-                $textoAdic .= $infPedido;
+            $infCplVal = !empty($this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue) ?
+                $this->infAdic->getElementsByTagName("infCpl")->item(0)->nodeValue : '';
+            if ($infCplVal !== '') {
+                $cplText = method_exists(parent::class, 'pAnfavea') ? parent::pAnfavea($infCplVal) : $infCplVal;
+                $textoAdic .= 'Inf. Contribuinte: ' . trim($cplText);
+            }
+            if (method_exists(parent::class, 'pGeraInformacoesDaTagCompra')) {
+                $infPedido = parent::pGeraInformacoesDaTagCompra();
+                if ($infPedido != "") {
+                    $textoAdic .= $infPedido;
+                }
             }
             $textoAdic .= $this->pSimpleGetValue($this->dest, "email", ' Email do Destinatário: ');
             $textoAdic .= !empty($this->infAdic->getElementsByTagName("infAdFisco")->item(0)->nodeValue) ?
@@ -354,16 +363,15 @@ class nfe_ws extends Danfe
     public function geraRelatorioSefaz($prot)
     {
         $this->prot = $prot;
-        $debug = false;
+        $debug = $this->c->debug;
 
         $arq_xml = $this->c->local . $this->chNFe . '-nfe.xml';
         $arq_proto_pdf = $this->c->local . $this->chNFe . '-prot.pdf';
         $arq_proto_url = $this->c->baseUrl . 'sefaz/' . $this->chNFe . '-prot.pdf';
 
-        // -----------------------------------
-        if ($debug) echo 'arq_xml = ' . $arq_xml;
-        if ($debug) echo 'arq_proto_pdf = ' . $arq_proto_pdf;
-        if ($debug) echo "\nGera protocolo: ";
+        if ($debug) {
+            error_log(sprintf('nfe-ws: geraRelatorioSefaz arq_xml=%s arq_proto_pdf=%s', $arq_xml, $arq_proto_pdf));
+        }
 
         if (empty($this->prot) || ($this->prot['status'] ?? '') != 'ok') {
             return false;
@@ -377,7 +385,9 @@ class nfe_ws extends Danfe
         }
 
         if (!file_exists($arq_xml)) {
-            if ($debug) echo "Arquivo xml inexistente! Processo abortado.\n";
+            if ($debug) {
+                error_log('nfe-ws: Arquivo xml inexistente! Processo abortado: ' . $arq_xml);
+            }
             return false;
         }
 
@@ -632,5 +642,49 @@ class nfe_ws extends Danfe
             return $extraTextBefore . trim($vct->nodeValue) . $extraTextAfter;
         }
         return '';
+    }
+
+    /**
+     * Converte datas/horas para timestamp (compatibilidade com versões antigas e novas do sped-da)
+     */
+    protected function pConvertTime($time)
+    {
+        if (method_exists(parent::class, 'pConvertTime')) {
+            return parent::pConvertTime($time);
+        }
+        if (method_exists($this, 'toTimestamp')) {
+            return $this->toTimestamp($time);
+        }
+        return strtotime($time);
+    }
+
+    /**
+     * Formata uma string aplicando uma máscara onde # é o caractere coringa
+     * (mantido para compatibilidade com versões anteriores que usavam pFormat)
+     */
+    protected function pFormat($campo = '', $mascara = '')
+    {
+        if (method_exists(parent::class, 'formatField')) {
+            return $this->formatField($campo, $mascara);
+        }
+        if ($campo === '' || $mascara === '') {
+            return $campo;
+        }
+        $sLimpo = preg_replace('/[^0-9A-Za-z]/', '', (string)$campo);
+        $sRetorno = '';
+        $sIdx = 0;
+        $tCampo = strlen($sLimpo);
+        for ($i = 0; $i < strlen($mascara); $i++) {
+            if ($mascara[$i] === '#') {
+                if ($sIdx < $tCampo) {
+                    $sRetorno .= $sLimpo[$sIdx++];
+                }
+            } else {
+                if ($sIdx < $tCampo) {
+                    $sRetorno .= $mascara[$i];
+                }
+            }
+        }
+        return $sRetorno;
     }
 }
