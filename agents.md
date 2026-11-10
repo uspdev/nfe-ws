@@ -39,13 +39,14 @@ nfe-ws/
 │   ├── .htaccess               # Regras de reescrita para Apache / FlightPHP
 │   ├── sample.htaccess         # Template de configuração do .htaccess
 │   └── index.php               # Ponto de entrada (Front Controller) e definição de rotas
-├── lib/                        # Classes de lógica e domínio (exclusivamente PHP)
-│   ├── ApiController.class.php # Controlador das rotas da API e autenticação
-│   ├── Config.class.php        # Carregamento e abstração das configurações ($cfg e $nfeConfig)
-│   ├── nfe-ws.class.php        # Lógica principal de validação, consulta SEFAZ e geração de PDF
-│   ├── Protocolo.class.php     # Extração e normalização de dados do protocolo da SEFAZ
-│   ├── Storage.class.php       # Utilitários de mapeamento de códigos da NF-e e SEFAZ
-│   └── Tools.class.php         # Extensão utilitária de comunicação com a SEFAZ
+├── src/                        # Classes PSR-4 (namespace Uspdev\NfeWs)
+│   ├── ApiController.php       # Controlador das rotas da API e autenticação
+│   ├── Config.php              # Carregamento e abstração das configurações via .env
+│   ├── NfeWs.php               # Lógica principal de validação, consulta SEFAZ e geração de PDF
+│   ├── Protocolo.php           # Extração e normalização de dados do protocolo da SEFAZ
+│   ├── Storage.php             # Utilitários de mapeamento de códigos da NF-e e SEFAZ
+│   ├── Tools.php               # Extensão utilitária de comunicação com a SEFAZ
+│   └── helpers.php             # Funções globais helper (env, config) e aliases legados
 ├── templates/                  # Templates e arquivos visuais de apresentação
 │   ├── index.tpl               # Template HTML da página inicial e documentação básica
 │   ├── protocolo.tpl           # Template HTML base para geração do PDF do protocolo SEFAZ
@@ -70,7 +71,7 @@ nfe-ws/
 
 ## 4. Arquitetura da API e Endpoints
 
-O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o tratamento das requisições para [`ApiController.class.php`](lib/ApiController.class.php).
+O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o tratamento das requisições para [`ApiController.php`](src/ApiController.php).
 
 ### Rotas Disponíveis:
 
@@ -131,8 +132,8 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
   ```
 * **Verificação de sintaxe:**
   ```bash
-  php -l lib/ApiController.class.php
-  php -l lib/nfe-ws.class.php
+  php -l src/ApiController.php
+  php -l src/NfeWs.php
   ```
 
 ---
@@ -140,7 +141,7 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
 ## 7. Diretrizes para Agentes de IA
 
 1. **Separação de Responsabilidades:**
-   * Mantenha apenas classes PHP com padrão `NomeClasse.class.php` em [`lib/`](lib/).
+   * Mantenha apenas classes PSR-4 em [`src/`](src/) com namespace `Uspdev\NfeWs`.
    * Todos os templates (HTML/TPL) devem residir em [`templates/`](templates/).
    * Imagens e assets visuais estáticos devem residir em [`templates/images/`](templates/images/).
 2. **Controle de Acesso e Segurança:**

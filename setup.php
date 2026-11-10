@@ -10,6 +10,8 @@ if (php_sapi_name() != 'cli') {
 chdir(__DIR__);
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Uspdev\NfeWs\Config;
+
 function green($str)
 {
     return "\033[0;32m" . $str . "\033[0;37m";

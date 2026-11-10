@@ -3,6 +3,7 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use Uspdev\NfeWs\Config;
 
 class HelpersTest extends TestCase
 {

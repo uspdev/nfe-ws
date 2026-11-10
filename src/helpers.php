@@ -1,5 +1,23 @@
 <?php
 
+use Uspdev\NfeWs\Config;
+
+// Aliases preguiçosos para compatibilidade com chamadas no namespace global
+spl_autoload_register(function ($class) {
+    $aliases = [
+        'Config'        => \Uspdev\NfeWs\Config::class,
+        'ApiController' => \Uspdev\NfeWs\ApiController::class,
+        'NfeWs'         => \Uspdev\NfeWs\NfeWs::class,
+        'nfe_ws'        => \Uspdev\NfeWs\NfeWs::class,
+        'Protocolo'     => \Uspdev\NfeWs\Protocolo::class,
+        'Storage'       => \Uspdev\NfeWs\Storage::class,
+        'Tools'         => \Uspdev\NfeWs\Tools::class,
+    ];
+    if (isset($aliases[$class])) {
+        class_alias($aliases[$class], $class);
+    }
+});
+
 if (!function_exists('env')) {
     /**
      * Obtém o valor de uma variável de ambiente, similar ao helper do Laravel.
@@ -10,7 +28,7 @@ if (!function_exists('env')) {
      */
     function env(string $key, $default = null)
     {
-        if (class_exists('Config')) {
+        if (class_exists(Config::class)) {
             Config::loadEnv();
         }
 
@@ -49,7 +67,7 @@ if (!function_exists('config')) {
      *
      * @param string|null $key Chave de configuração (ex: 'base_url', 'cache_sefaz_ttl', 'nfe_config.cnpj')
      * @param mixed $default Valor padrão caso a chave não exista
-     * @return mixed|\Config Retorna o valor da configuração ou a instância única do Config
+     * @return mixed|\Uspdev\NfeWs\Config Retorna o valor da configuração ou a instância única do Config
      */
     function config(?string $key = null, $default = null)
     {

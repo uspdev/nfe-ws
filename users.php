@@ -8,6 +8,8 @@ if (php_sapi_name() !== 'cli') {
 
 require __DIR__ . '/vendor/autoload.php';
 
+use Uspdev\NfeWs\Config;
+
 if ($argc < 2) {
     echo "Sintaxe:\n";
     echo "php users.php add nome\n";

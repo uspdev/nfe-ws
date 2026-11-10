@@ -1,5 +1,7 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
 use NFePHP\NFe\Complements;
 
 class ApiController
@@ -186,7 +188,7 @@ class ApiController
         }
 
         try {
-            $nfe = new nfe_ws($nfe_xml);
+            $nfe = new NfeWs($nfe_xml);
         } catch (\Throwable $e) {
             $res['status'] = 'Erro ao processar XML: ' . $e->getMessage();
             $res['xml'] = [
@@ -287,7 +289,7 @@ class ApiController
      */
     private function processaConsultaChave($chaveInput, array $res)
     {
-        if (!$chave = nfe_ws::validaChNFe($chaveInput)) {
+        if (!$chave = NfeWs::validaChNFe($chaveInput)) {
             $res['status'] = 'Chave incorreta ' . strlen($chaveInput);
             echo json_encode($res);
             return;

@@ -8,11 +8,11 @@
         "vlucas/phpdotenv": "^5.8"
     },
     "autoload": {
-        "classmap": [
-            "lib/"
-        ],
+        "psr-4": {
+            "Uspdev\\NfeWs\\": "src/"
+        },
         "files": [
-            "lib/helpers.php"
+            "src/helpers.php"
         ]
     },
     "minimum-stability": "dev",

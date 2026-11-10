@@ -1,6 +1,7 @@
 <?php
 
 use flight\Engine;
+use Uspdev\NfeWs\ApiController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

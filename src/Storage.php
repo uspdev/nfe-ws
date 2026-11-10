@@ -1,5 +1,7 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
 /*
  * Contém dados estáticos relacionados a NFE e códigos
  * todas as funções são estáticas

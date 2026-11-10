@@ -3,6 +3,7 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use Uspdev\NfeWs\Config;
 
 class ApiRoutesTest extends TestCase
 {
@@ -20,7 +21,7 @@ class ApiRoutesTest extends TestCase
     {
         self::$baseUrl = sprintf('http://%s:%d', self::$serverHost, self::$serverPort);
 
-        $config = new \Config();
+        $config = new Config();
         self::$pwdFilePath = $config->pwdFile;
 
         // Backup do arquivo de senhas atual, se existir

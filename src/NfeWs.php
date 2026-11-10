@@ -1,5 +1,9 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
+use DOMDocument;
+use TCPDF;
 use NFePHP\Common\Signer;
 use NFePHP\DA\Legacy\Common;
 
@@ -8,7 +12,7 @@ use NFePHP\DA\NFe\Danfe;
 
 
 #[\AllowDynamicProperties]
-class nfe_ws extends Danfe
+class NfeWs extends Danfe
 {
     public $c;
     public $nfeProc;

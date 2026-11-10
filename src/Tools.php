@@ -1,5 +1,7 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
 class Tools
 {
     public static function Dom2Array($root)

@@ -1,5 +1,7 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
 use NFePHP\DA\Legacy\Common;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Soap\SoapCurl;
@@ -57,7 +59,7 @@ class Protocolo extends Common
     {
         $maxage = $this->c->cacheSefazTtl; // configurado em config.php (padrao: 600 segundos)
 
-        if (!$this->chNFe = nfe_ws::validaChNFe($chave)) {
+        if (!$this->chNFe = NfeWs::validaChNFe($chave)) {
             return false;
         }
 

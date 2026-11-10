@@ -1,5 +1,7 @@
 <?php
 
+namespace Uspdev\NfeWs;
+
 use Dotenv\Dotenv;
 use NFePHP\Common\Certificate;
 
@@ -244,22 +246,5 @@ class Config
             }
             throw $e;
         }
-    }
-}
-
-if (!function_exists('config')) {
-    /**
-     * Helper global para acessar configuracoes da aplicacao
-     *
-     * @param string|null $key
-     * @param mixed $default
-     * @return mixed|\Config
-     */
-    function config(?string $key = null, $default = null)
-    {
-        if ($key === null) {
-            return Config::getInstance();
-        }
-        return Config::get($key, $default);
     }
 }
