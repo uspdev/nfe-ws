@@ -1,7 +1,6 @@
 RewriteEngine On
 
-#no apache 2.2 já precisa de rewritebase
-RewriteBase /uspdev/nfe-ws/api/
+RewriteRule .* - [E=HTTP_X_API_KEY:%{HTTP:X-API-Key}]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
