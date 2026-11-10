@@ -20,9 +20,6 @@ class ApiRoutesTest extends TestCase
     {
         self::$baseUrl = sprintf('http://%s:%d', self::$serverHost, self::$serverPort);
 
-        global $cfg;
-        require_once __DIR__ . '/../config.php';
-
         $config = new \Config();
         self::$pwdFilePath = $config->pwdFile;
 

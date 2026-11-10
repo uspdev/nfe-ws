@@ -6,8 +6,7 @@ if (php_sapi_name() !== 'cli') {
     exit();
 }
 
-require 'config.php';
-require 'vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 if ($argc < 2) {
     echo "Sintaxe:\n";

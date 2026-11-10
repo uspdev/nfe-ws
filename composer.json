@@ -2,13 +2,17 @@
     "require": {
         "mikecao/flight": "^3.0",
         "nfephp-org/sped-nfe": "^5.1",
-        "nfephp-org/sped-da": "^0.1.9",
+        "nfephp-org/sped-da": "dev-master",
         "tecnickcom/tcpdf": "^6.4",
-        "raelgc/template": "dev-master"
+        "raelgc/template": "dev-master",
+        "vlucas/phpdotenv": "^5.8"
     },
     "autoload": {
         "classmap": [
             "lib/"
+        ],
+        "files": [
+            "lib/helpers.php"
         ]
     },
     "minimum-stability": "dev",

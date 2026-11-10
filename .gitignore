@@ -2,8 +2,10 @@
 local/
 vendor/
 config.php
+.env
 
 # phpstorm
 .idea
 .phpunit.cache/
+
 

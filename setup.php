@@ -1,18 +1,14 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
-
-/*
-apt install php-curl php-dom php-json php-gd php-mbstring php-mcrypt php-soap php-xml php-zip
- *
- * a2enmod rewrite
- */
+// Script de configuracao e verificacao de pendencias para instalacao do NFE-WS
 
 if (php_sapi_name() != 'cli') {
-    echo "Nao esta em linha de comando!";
+    echo "Execute a partir da linha de comando!\n";
     exit();
 }
 
 chdir(__DIR__);
+require_once __DIR__ . '/vendor/autoload.php';
 
 function green($str)
 {
@@ -24,26 +20,24 @@ function red($str)
     return "\033[0;31m" . $str . "\033[0;37m";
 }
 
-function le_config()
+function le_config(&$config)
 {
-    global $ok, $cfg;
-    if (!is_file(__DIR__ . '/config.php')) {
-        if (!copy(__DIR__ . '/config.sample.php', __DIR__ . '/config.php')) {
+    global $ok;
+    if (!is_file(__DIR__ . '/.env')) {
+        if (!is_file(__DIR__ . '/.env.example') || !copy(__DIR__ . '/.env.example', __DIR__ . '/.env')) {
             $ok = false;
-            return red('Erro!') . "\n    Não foi possível criar config.php.";
+            return red('Erro!') . "\n    Não foi possível criar o arquivo .env a partir de .env.example.";
         }
-        include_once __DIR__ . '/config.php';
-        $cfg['url'] = parse_url($cfg['baseUrl']);
-        $msg = red('Erro!') . "\n";
-        $msg .= "    config.php foi criado. Edite as configuracoes locais antes de continuar.\n";
+        $config = new Config();
         $ok = false;
+        $msg = red('Erro!') . "\n";
+        $msg .= "    O arquivo .env foi criado a partir de .env.example. Edite as configurações antes de continuar.\n";
     } else {
-        include_once __DIR__ . '/config.php';
-        if (empty($cfg['baseUrl'])) {
+        $config = new Config();
+        if (empty($config->baseUrl)) {
             $ok = false;
-            return red('Erro!') . "\n    baseUrl não definida em config.php.";
+            return red('Erro!') . "\n    NFE_BASE_URL não definida no .env.";
         }
-        $cfg['url'] = parse_url($cfg['baseUrl']);
         $msg = green("OK!");
     }
     return $msg;
@@ -82,14 +76,14 @@ function verifica_htaccess()
     return green("OK");
 }
 
-function verifica_certificado()
+function verifica_certificado($config)
 {
-    global $ok, $cfg;
+    global $ok;
 
-    if (!is_file($cfg['cert_file'])) {
+    if (!is_file($config->certFile)) {
         $msg = red("Erro!") . PHP_EOL;
         $msg .= "    Voce deve ter um certificado ICP BRASIL valido em formato PFX.\n";
-        $msg .= "    Caminho configurado: {$cfg['cert_file']}\n";
+        $msg .= "    Caminho configurado: {$config->certFile}\n";
         $ok = false;
     } else {
         $msg = green('OK');
@@ -98,17 +92,11 @@ function verifica_certificado()
     return $msg;
 }
 
-function seta_permissao()
+function verifica_pastas($config)
 {
-    $msg = red("Não implementado ainda");
-    return $msg;
-}
+    global $ok;
 
-function verifica_pastas()
-{
-    global $cfg, $ok;
-
-    $dirs = [$cfg['local'], dirname($cfg['cert_file']), dirname($cfg['pwdFile'])];
+    $dirs = [$config->local, dirname($config->certFile), dirname($config->pwdFile)];
     foreach (array_unique($dirs) as $dir) {
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             $ok = false;
@@ -119,15 +107,15 @@ function verifica_pastas()
     return green('OK');
 }
 
-function verifica_permissao()
+function verifica_permissao($config)
 {
-    global $ok, $cfg;
+    global $ok;
 
-    if (empty($cfg['local'])) {
+    if (empty($config->local)) {
         return red('Ainda não configurado !!');
     }
 
-    $paths = [$cfg['local'], dirname($cfg['pwdFile'])];
+    $paths = [$config->local, dirname($config->pwdFile)];
     foreach ($paths as $path) {
         if (!is_dir($path) || (!is_writable($path))) {
             $ok = false;
@@ -138,18 +126,17 @@ function verifica_permissao()
     return green('OK');
 }
 
-function verifica_usuario()
+function verifica_usuario($config)
 {
-    global $ok, $cfg;
+    global $ok;
 
-    if (!is_file($cfg['pwdFile'])) {
-        $msg = red('Erro - sem arquivo de usuários');
+    if (!is_file($config->pwdFile)) {
+        $msg = red('Erro - sem arquivo de usuários/API keys');
         $ok = false;
-
     } else {
-        $users = unserialize(file_get_contents($cfg['pwdFile']));
+        $users = @unserialize(file_get_contents($config->pwdFile));
         if (!is_array($users) || empty($users)) {
-            $msg = red('Erro - sem usuários cadastrados');
+            $msg = red('Erro - sem usuários cadastrados. Execute: php users.php add <nome>');
             $ok = false;
         } else {
             $msg = green('OK');
@@ -160,14 +147,13 @@ function verifica_usuario()
 }
 
 // ------------------------------------------------------
-$config = '';
-$cfg = [];
 $ok = true;
+$config = null;
 
 echo '* Configurador principal NFE-WS *' . PHP_EOL . PHP_EOL;
 
-echo "1. Lendo arquivo de configuração: ";
-echo le_config() . PHP_EOL;
+echo "1. Lendo arquivo de configuração (.env): ";
+echo le_config($config) . PHP_EOL;
 
 echo '2. Atualizando Composer: ';
 echo composer() . PHP_EOL;
@@ -176,20 +162,20 @@ echo '3. Verifica o htaccess da pasta API: ';
 echo verifica_htaccess() . PHP_EOL;
 
 echo "4. Verifica a estrutura de pastas: ";
-echo verifica_pastas() . PHP_EOL;
+echo verifica_pastas($config) . PHP_EOL;
 
 echo "5. Verifica permissão de acesso ao sistema de arquivos: ";
-echo verifica_permissao() . PHP_EOL;
+echo verifica_permissao($config) . PHP_EOL;
 
 echo "6. Verifica o certificado: ";
-echo verifica_certificado() . "\n";
+echo verifica_certificado($config) . PHP_EOL;
 
-echo '7. Verifica usuário: ';
-echo verifica_usuario() . PHP_EOL;
+echo '7. Verifica usuários/API keys: ';
+echo verifica_usuario($config) . PHP_EOL;
 
 echo "\n";
 if ($ok) {
-    echo "Já pode usar acessando " . rtrim($cfg['baseUrl'], '/') . '/api/' . "\n\n";
+    echo "Já pode usar acessando " . rtrim($config->baseUrl, '/') . "/\n\n";
 } else {
     echo "** Há pendências a serem corrigidas!\n\n";
 }
