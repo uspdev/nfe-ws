@@ -1,9 +1,5 @@
 <?php
-// esta senha deve ser utilizada em linha de comando no servidor
-// para gerenciar os usuários e senhas que acessam o webservice.
-// em principio haverão poucos usuarios, que são os sistemas clientes.
-// os usuarios propriamente deverao ser autenticados na aplicação e nao na api
-// gera par se senha e usuário e salva no arquivo
+// Use esta ferramenta na linha de comando para gerenciar API keys.
 
 if (php_sapi_name() !== 'cli') {
     echo "Not running from command line!!";
@@ -11,19 +7,23 @@ if (php_sapi_name() !== 'cli') {
 }
 
 require 'config.php';
-require 'lib/Config.class.php';
+require 'vendor/autoload.php';
 
 if ($argc < 2) {
     echo "Sintaxe:\n";
-    echo "php users.php add username <password>\n";
+    echo "php users.php add nome\n";
     echo "php users.php list\n";
-    echo "php users.php del username\n";
+    echo "php users.php del nome\n";
     exit();
 }
 $c = new Config();
 
+#[\AllowDynamicProperties]
 class Users
 {
+    public $c;
+    public $users = [];
+
     function __construct()
     {
         $this->c = new Config();
@@ -34,13 +34,19 @@ class Users
         }
     }
 
-    public function add($usr, $pwd)
+    public function add($usr)
     {
         if ($this->isUser($usr)) {
             return "Usuário já cadastrado";
         }
-        $this->users[$usr] = md5($pwd);
-        return $this->save();
+        $apiKey = bin2hex(random_bytes(32));
+        $this->users[$usr] = hash('sha256', $apiKey);
+        $result = $this->save();
+        if ($result !== 'Salvo com sucesso.') {
+            unset($this->users[$usr]);
+            return $result;
+        }
+        return $result . PHP_EOL . "API key (guarde-a agora; ela não será exibida novamente): " . $apiKey;
     }
 
     public function del($usr)
@@ -79,30 +85,16 @@ class Users
 $users = new Users;
 
 if ($argv[1] == 'add') {
+    if (!isset($argv[2]) || trim($argv[2]) === '') {
+        echo "Especifique um nome para a API key!" . PHP_EOL;
+        exit;
+    }
     $usr = $argv[2];
     if ($users->isUser($usr)) {
         echo 'Usuário já existe.' . PHP_EOL;
         exit;
     }
-
-    $pwd = isset($argv[3]) ? $argv[3] : '';
-
-    while (!$pwd) {
-        echo "Senha: ";
-        system('stty -echo');
-        $pwd = trim(fgets(STDIN));
-        system('stty echo');
-        echo PHP_EOL; // add a new line since the users CR didn't echo
-
-        //$pwd = readline('Digite a senha para o usuário ' . $usr . ': ');
-
-        if (strlen($pwd) < 5) {
-            echo "Senha muito curta.\n";
-            $pwd = '';
-        }
-    }
-
-    echo $users->add($usr, $pwd) . PHP_EOL;
+    echo $users->add($usr) . PHP_EOL;
     exit();
 
 }

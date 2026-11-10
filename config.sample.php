@@ -12,9 +12,9 @@ $cfg['local'] = __DIR__ . '/local/recebidas/';
 $cfg['cert_file'] = __DIR__ . '/local/certs/certificado2018-2019.pfx';
 $cfg['cert_pwd'] = 'xxxxxxxx';
 
-// arquivo com senha de acesso ao webservice
+// Arquivo com hashes das API keys de acesso ao webservice
 // Para manipular o arquivo use:
-// >php passwd.php
+// >php users.php add nome
 $cfg['pwdFile'] = __DIR__ . '/local/passwd.txt';
 
 // o baseurl é usado para dar o caminho completo do arquivo pdf a ser baixado
@@ -23,6 +23,14 @@ $cfg['baseUrl'] = 'http://servidor/nfe-ws/';
 
 // Se true vamos apresentar alguns erros de debug
 $cfg['debug'] = false;
+
+// Configurações de cache
+// Tempo em segundos para cache da consulta à SEFAZ (evita Rejeição 656: Consumo Indevido). Padrão: 600 (10 minutos)
+$cfg['cache_sefaz_ttl'] = 600;
+
+// Reutilizar arquivos PDF já gerados em disco (DANFE e relatório SEFAZ)
+// Se true, evita re-renderização caso o arquivo já exista em disco. Padrão: true
+$cfg['cache_pdf'] = true;
 
 // cofig no nfe-php
 $nfeConfig = [
@@ -44,4 +52,3 @@ Alias /nfe-ws/api /home/sistemas/nfe-ws/api
                 AllowOverride All
 </Directory>
 */
-
