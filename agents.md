@@ -58,8 +58,8 @@ nfe-ws/
 ├── testes/                     # Exemplos de XMLs e scripts manuais de verificação
 ├── tests/                      # Testes automatizados (PHPUnit)
 │   └── ApiRoutesTest.php       # Testes de integração das rotas da API
-├── config.php                  # Configurações ativas do ambiente (não versionado)
-├── config.sample.php           # Exemplo de configuração
+├── .env                       # Configurações ativas do ambiente (não versionado)
+├── .env.example               # Exemplo de variáveis de ambiente
 ├── setup.php                   # Script CLI para verificação e diagnóstico de requisitos
 ├── users.php                   # Script CLI para gerenciar credenciais de acesso
 ├── composer.json               # Gerenciador de dependências PHP
@@ -106,16 +106,16 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
   php users.php del <nome>
   ```
 
-### Arquivo `config.php`:
-* `$cfg['local']`: Caminho de gravação dos arquivos (`local/recebidas/`).
-* `$cfg['cert_file']`: Caminho do certificado A1 (`.pfx`).
-* `$cfg['cert_pwd']`: Senha do certificado digital.
-* `$cfg['pwdFile']`: Caminho do arquivo de senhas (`local/passwd.txt`).
-* `$cfg['baseUrl']`: URL base da aplicação para composição dos links de retorno.
-* `$cfg['debug']`: Booleano para exibição de detalhes de erro.
-* `$cfg['cache_sefaz_ttl']`: Tempo de vida (TTL) em segundos da consulta SEFAZ em cache local (padrão: `600`).
-* `$cfg['cache_pdf']`: Booleano para reaproveitar PDFs já gerados em disco (DANFE e protocolo SEFAZ) (padrão: `true`).
-* `$nfeConfig`: Parâmetros do NFePHP (ambiente de produção/homologação, CNPJ emitente, UF, versão do schema `4.00`).
+### Arquivo `.env`:
+* `NFE_LOCAL_PATH`: Caminho de gravação dos arquivos (`local/recebidas/`).
+* `NFE_CERT_FILE`: Caminho do certificado A1 (`.pfx`).
+* `NFE_CERT_PASSWORD`: Senha do certificado digital.
+* `NFE_PASSWD_FILE`: Caminho do arquivo de senhas/API keys (`local/passwd.txt`).
+* `NFE_BASE_URL`: URL base da aplicação para composição dos links de retorno.
+* `NFE_DEBUG`: Booleano para exibição de detalhes de erro.
+* `NFE_CACHE_SEFAZ_TTL`: Tempo de vida (TTL) em segundos da consulta SEFAZ em cache local (padrão: `600`).
+* `NFE_CACHE_PDF`: Booleano para reaproveitar PDFs já gerados em disco (DANFE e protocolo SEFAZ) (padrão: `true`).
+* Parâmetros do NFePHP: `NFE_TP_AMB`, `NFE_RAZAO_SOCIAL`, `NFE_CNPJ`, `NFE_SIGLA_UF`, `NFE_SCHEMES`, `NFE_VERSAO`.
 
 ---
 

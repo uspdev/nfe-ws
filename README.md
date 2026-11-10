@@ -33,35 +33,35 @@ Instale as dependências via Composer:
 composer install
 ```
 
-### 2. Arquivo de Configuração (`config.php`)
+### 2. Arquivo de Configuração (`.env`)
 
-Copie o arquivo de exemplo `config.sample.php` para `config.php`:
+Copie o arquivo de exemplo `.env.example` para `.env`:
 
 ```bash
-cp config.sample.php config.php
+cp .env.example .env
 ```
 
 Edite as configurações de acordo com o seu ambiente:
 
-#### Parâmetros do Webservice (`$cfg`)
+#### Parâmetros do Webservice (`.env`)
 
-- **`$cfg['local']`**: Diretório onde os arquivos de NF-e (XMLs, DANFEs em PDF e protocolos) são gravados (ex: `__DIR__ . '/local/recebidas/'`).
-- **`$cfg['cert_file']`**: Caminho completo para o certificado digital A1 em formato `.pfx` (ex: `__DIR__ . '/local/certs/certificado.pfx'`).
-- **`$cfg['cert_pwd']`**: Senha do certificado digital.
-- **`$cfg['pwdFile']`**: Caminho do arquivo que armazena os hashes das API keys (ex: `__DIR__ . '/local/passwd.txt'`).
-- **`$cfg['baseUrl']`**: URL base pública do webservice terminada em barra (ex: `http://servidor/nfe-ws/`). É utilizada na composição dos links de retorno para download de arquivos gerados.
-- **`$cfg['debug']`**: Booleano (`true`/`false`) para exibir informações adicionais de depuração.
-- **`$cfg['cache_sefaz_ttl']`**: Tempo em segundos de validade do cache local da consulta SEFAZ (evita Rejeição 656: Consumo Indevido). Padrão: `600` (10 minutos).
-- **`$cfg['cache_pdf']`**: Booleano (`true`/`false`). Quando ativo, reutiliza arquivos PDF já gerados em disco (DANFE e protocolo SEFAZ), evitando re-renderização em requisições repetidas. Padrão: `true`.
+- **`NFE_LOCAL_PATH`**: Diretório onde os arquivos de NF-e (XMLs, DANFEs em PDF e protocolos) são gravados (ex: `local/recebidas/`).
+- **`NFE_CERT_FILE`**: Caminho para o certificado digital A1 em formato `.pfx` (ex: `local/certs/certificado.pfx`).
+- **`NFE_CERT_PASSWORD`**: Senha do certificado digital.
+- **`NFE_PASSWD_FILE`**: Caminho do arquivo que armazena os hashes das API keys (ex: `local/passwd.txt`).
+- **`NFE_BASE_URL`**: URL base pública do webservice terminada em barra (ex: `https://servidor/nfe-ws/api/`). É utilizada na composição dos links de retorno para download de arquivos gerados.
+- **`NFE_DEBUG`**: Booleano (`true`/`false`) para exibir informações adicionais de depuração.
+- **`NFE_CACHE_SEFAZ_TTL`**: Tempo em segundos de validade do cache local da consulta SEFAZ (evita Rejeição 656: Consumo Indevido). Padrão: `600` (10 minutos).
+- **`NFE_CACHE_PDF`**: Booleano (`true`/`false`). Quando ativo, reutiliza arquivos PDF já gerados em disco (DANFE e protocolo SEFAZ), evitando re-renderização em requisições repetidas. Padrão: `true`.
 
-#### Parâmetros da Biblioteca NFePHP (`$nfeConfig`)
+#### Parâmetros da Biblioteca NFePHP
 
-- **`tpAmb`**: Tipo de ambiente (`1` para Produção, `2` para Homologação).
-- **`razaosocial`**: Razão social associada ao certificado digital.
-- **`cnpj`**: CNPJ da instituição/emitente.
-- **`siglaUF`**: Sigla da unidade federativa (ex: `'SP'`).
-- **`schemes`**: Versão dos schemas XML da SEFAZ (ex: `'PL009_V4'`).
-- **`versao`**: Versão do leiaute da NF-e (ex: `'4.00'`).
+- **`NFE_TP_AMB`**: Tipo de ambiente (`1` para Produção, `2` para Homologação).
+- **`NFE_RAZAO_SOCIAL`**: Razão social associada ao certificado digital.
+- **`NFE_CNPJ`**: CNPJ da instituição/emitente.
+- **`NFE_SIGLA_UF`**: Sigla da unidade federativa (ex: `'SP'`).
+- **`NFE_SCHEMES`**: Versão dos schemas XML da SEFAZ (ex: `'PL009_V4'`).
+- **`NFE_VERSAO`**: Versão do leiaute da NF-e (ex: `'4.00'`).
 
 ### 3. Diagnóstico e Preparação do Ambiente (`setup.php`)
 
@@ -72,7 +72,7 @@ php setup.php
 ```
 
 O script verifica:
-1. Existência e integridade do `config.php` (incluindo validação de `baseUrl`);
+1. Existência e integridade do `.env` (incluindo validação de `NFE_BASE_URL`);
 2. Instalação das dependências do Composer;
 3. Criação e integridade do arquivo `api/.htaccess` com regras de reescrita;
 4. Criação das pastas de armazenamento e certificados;
