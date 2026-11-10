@@ -9,35 +9,6 @@ class Config
     private static bool $envLoaded = false;
     private ?Certificate $certificate = null;
 
-    /**
-     * Valores predefinidos da aplicacao que podem ser sobrescritos pelo .env
-     */
-    private static array $defaults = [
-        // Caminhos de arquivos (resolvidos relativos a raiz do projeto)
-        'NFE_LOCAL_PATH'      => 'local/recebidas/',
-        'NFE_CERT_FILE'       => 'local/certs/certificado.pfx',
-        'NFE_CERT_PASSWORD'   => '',
-        'NFE_PASSWD_FILE'     => 'local/passwd.txt',
-
-        // Aplicacao e Rede
-        'NFE_BASE_URL'        => '',
-        'NFE_DEBUG'           => false,
-        'NFE_APP_VERSAO'      => '2.0.8',
-
-        // Caching e Performance
-        'NFE_CACHE_SEFAZ_TTL' => 600,
-        'NFE_CACHE_PDF'       => true,
-
-        // Parametros do NFePHP
-        'NFE_TP_AMB'          => 1,
-        'NFE_RAZAO_SOCIAL'    => 'Escola de Engenharia de São Carlos',
-        'NFE_CNPJ'            => '63025530002824',
-        'NFE_SIGLA_UF'        => 'SP',
-        'NFE_SCHEMES'         => 'PL009_V4',
-        'NFE_VERSAO'          => '4.00',
-        'NFE_ATUALIZACAO'     => '2022-07-25 10:26:00',
-    ];
-
     private array $data = [];
 
     public string $local;
@@ -58,17 +29,27 @@ class Config
             return;
         }
 
-        $baseDir = dirname(__DIR__);
-
-        // Garante que o .env seja lido do disco apenas uma vez por requisicao
-        if (!self::$envLoaded && class_exists(Dotenv::class) && is_file($baseDir . '/.env')) {
-            $dotenv = Dotenv::createImmutable($baseDir);
-            $dotenv->safeLoad();
-            self::$envLoaded = true;
-        }
-
+        self::loadEnv();
         $this->loadConfiguration();
         self::$instance = $this;
+    }
+
+    /**
+     * Garante que as variaveis do arquivo .env sejam carregadas
+     */
+    public static function loadEnv(): void
+    {
+        if (self::$envLoaded) {
+            return;
+        }
+
+        $baseDir = dirname(__DIR__);
+        if (class_exists(Dotenv::class) && is_file($baseDir . '/.env')) {
+            $dotenv = Dotenv::createImmutable($baseDir);
+            $dotenv->safeLoad();
+        }
+
+        self::$envLoaded = true;
     }
 
     /**
@@ -102,53 +83,53 @@ class Config
     }
 
     /**
-     * Carrega as configuracoes mesclando os defaults predefinidos com o .env
+     * Carrega as configuracoes a partir de variaveis de ambiente com valores padrao
      */
     private function loadConfiguration(): void
     {
         // 1. Versao da aplicacao
-        $this->appVersao = (string)($_ENV['NFE_APP_VERSAO'] ?? self::$defaults['NFE_APP_VERSAO']);
+        $this->appVersao = (string)env('NFE_APP_VERSAO', '2.0.8');
         if (!defined('VERSAO')) {
             define('VERSAO', $this->appVersao);
         }
 
         // 2. Caminhos de arquivos
-        $localRaw = $_ENV['NFE_LOCAL_PATH'] ?? self::$defaults['NFE_LOCAL_PATH'];
+        $localRaw = env('NFE_LOCAL_PATH', 'local/recebidas/');
         $this->local = $this->resolvePath($localRaw);
         if ($this->local !== '' && !str_ends_with($this->local, '/')) {
             $this->local .= '/';
         }
 
-        $certRaw = $_ENV['NFE_CERT_FILE'] ?? self::$defaults['NFE_CERT_FILE'];
+        $certRaw = env('NFE_CERT_FILE');
         $this->certFile = $this->resolvePath($certRaw);
 
-        $this->certPwd = (string)($_ENV['NFE_CERT_PASSWORD'] ?? self::$defaults['NFE_CERT_PASSWORD']);
+        $this->certPwd = (string)env('NFE_CERT_PASSWORD', '');
 
-        $pwdRaw = $_ENV['NFE_PASSWD_FILE'] ?? self::$defaults['NFE_PASSWD_FILE'];
+        $pwdRaw = env('NFE_PASSWD_FILE', 'local/passwd.txt');
         $this->pwdFile = $this->resolvePath($pwdRaw);
 
         // 3. Rede e comportamento
-        $baseRaw = $_ENV['NFE_BASE_URL'] ?? self::$defaults['NFE_BASE_URL'];
+        $baseRaw = env('NFE_BASE_URL', '');
         $this->baseUrl = $baseRaw !== '' ? rtrim((string)$baseRaw, '/') . '/' : '';
 
-        $debugRaw = $_ENV['NFE_DEBUG'] ?? self::$defaults['NFE_DEBUG'];
+        $debugRaw = env('NFE_DEBUG', false);
         $this->debug = filter_var($debugRaw, FILTER_VALIDATE_BOOLEAN);
 
-        $ttlRaw = $_ENV['NFE_CACHE_SEFAZ_TTL'] ?? self::$defaults['NFE_CACHE_SEFAZ_TTL'];
+        $ttlRaw = env('NFE_CACHE_SEFAZ_TTL', 600);
         $this->cacheSefazTtl = (int)$ttlRaw;
 
-        $pdfRaw = $_ENV['NFE_CACHE_PDF'] ?? self::$defaults['NFE_CACHE_PDF'];
+        $pdfRaw = env('NFE_CACHE_PDF', true);
         $this->cachePdf = filter_var($pdfRaw, FILTER_VALIDATE_BOOLEAN);
 
         // 4. Parametros NFePHP
         $this->nfeConfig = [
-            'atualizacao' => (string)($_ENV['NFE_ATUALIZACAO'] ?? self::$defaults['NFE_ATUALIZACAO']),
-            'tpAmb'       => (int)($_ENV['NFE_TP_AMB'] ?? self::$defaults['NFE_TP_AMB']),
-            'razaosocial' => (string)($_ENV['NFE_RAZAO_SOCIAL'] ?? self::$defaults['NFE_RAZAO_SOCIAL']),
-            'cnpj'        => (string)($_ENV['NFE_CNPJ'] ?? self::$defaults['NFE_CNPJ']),
-            'siglaUF'     => (string)($_ENV['NFE_SIGLA_UF'] ?? self::$defaults['NFE_SIGLA_UF']),
-            'schemes'     => (string)($_ENV['NFE_SCHEMES'] ?? self::$defaults['NFE_SCHEMES']),
-            'versao'      => (string)($_ENV['NFE_VERSAO'] ?? self::$defaults['NFE_VERSAO']),
+            'atualizacao' => (string)env('NFE_ATUALIZACAO', '2022-07-25 10:26:00'),
+            'tpAmb'       => (int)env('NFE_TP_AMB', 1),
+            'razaosocial' => (string)env('NFE_RAZAO_SOCIAL'),
+            'cnpj'        => (string)env('NFE_CNPJ'),
+            'siglaUF'     => (string)env('NFE_SIGLA_UF'),
+            'schemes'     => (string)env('NFE_SCHEMES', 'PL_010g'),
+            'versao'      => (string)env('NFE_VERSAO', '4.00'),
         ];
 
         // Mapeia dados normalizados para consumo via get() ou helper config()
@@ -216,9 +197,9 @@ class Config
     /**
      * Resolve caminhos relativos baseando-se na raiz do projeto
      */
-    private function resolvePath(string $path): string
+    private function resolvePath(?string $path): string
     {
-        if ($path === '') {
+        if ($path === null || $path === '') {
             return '';
         }
         if (str_starts_with($path, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $path)) {

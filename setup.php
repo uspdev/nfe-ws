@@ -38,6 +38,10 @@ function le_config(&$config)
             $ok = false;
             return red('Erro!') . "\n    NFE_BASE_URL não definida no .env.";
         }
+        if (empty($config->nfeConfig['cnpj']) || empty($config->nfeConfig['razaosocial']) || empty($config->nfeConfig['siglaUF'])) {
+            $ok = false;
+            return red('Erro!') . "\n    NFE_RAZAO_SOCIAL, NFE_CNPJ ou NFE_SIGLA_UF não definidos no .env.";
+        }
         $msg = green("OK!");
     }
     return $msg;
@@ -80,10 +84,10 @@ function verifica_certificado($config)
 {
     global $ok;
 
-    if (!is_file($config->certFile)) {
+    if (empty($config->certFile) || !is_file($config->certFile)) {
         $msg = red("Erro!") . PHP_EOL;
-        $msg .= "    Voce deve ter um certificado ICP BRASIL valido em formato PFX.\n";
-        $msg .= "    Caminho configurado: {$config->certFile}\n";
+        $msg .= "    Voce deve ter um certificado ICP BRASIL valido em formato PFX e configurar NFE_CERT_FILE no .env.\n";
+        $msg .= "    Caminho configurado: " . ($config->certFile ?: '(não definido)') . "\n";
         $ok = false;
     } else {
         $msg = green('OK');
@@ -96,7 +100,7 @@ function verifica_pastas($config)
 {
     global $ok;
 
-    $dirs = [$config->local, dirname($config->certFile), dirname($config->pwdFile)];
+    $dirs = array_filter([$config->local, !empty($config->certFile) ? dirname($config->certFile) : null, dirname($config->pwdFile)]);
     foreach (array_unique($dirs) as $dir) {
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             $ok = false;
