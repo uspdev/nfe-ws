@@ -6,7 +6,7 @@ use NFePHP\NFe\Complements;
 
 class ApiController
 {
-    private $config;
+    private Config $config;
 
     public function __construct()
     {
@@ -16,7 +16,7 @@ class ApiController
     /**
      * Rota GET /: Exibe a pagina inicial / documentacao
      */
-    public function index()
+    public function index(): void
     {
         readfile(__DIR__ . '/../templates/index.tpl');
     }
@@ -47,12 +47,13 @@ class ApiController
         }
 
         if ($apiKey === '') {
-            header('HTTP/1.0 401 Unauthorized');
+            http_response_code(401);
             echo "Você deve informar uma API key válida para acessar este recurso\n";
             exit;
         }
 
         if (!is_file($this->config->pwdFile)) {
+            http_response_code(500);
             echo 'Este webservice ainda não foi configurado!';
             exit();
         }
@@ -67,12 +68,13 @@ class ApiController
             }
         }
         if (!$valid) {
-            header('HTTP/1.0 401 Unauthorized');
+            http_response_code(401);
             echo 'Credenciais inválidas';
             exit();
         }
 
         if (!is_dir($this->config->local)) {
+            http_response_code(500);
             echo 'A pasta de dados não está configurada!';
             exit();
         }
@@ -81,25 +83,30 @@ class ApiController
     }
 
     /**
-     * Rota GET /status: Consulta a validade do certificado digital
+     * Rota GET /status: Consulta a validade do certificado digital em formato JSON
      */
-    public function status()
+    public function status(): void
     {
-        echo 'status<br>';
         try {
             $certificado = $this->config->getCertificate();
-            echo $certificado->getCnpj() . ' - ';
-            echo $certificado->getCompanyName() . '<br>';
             $validTo = $certificado->getValidTo();
-            echo 'Validade: ' . $validTo->format('d/m/Y') . '<br>';
+            $expirado = $certificado->isExpired();
 
-            if ($certificado->isExpired()) {
-                echo 'Certificado VENCIDO! Não é possivel mais usá-lo!';
-            } else {
-                echo 'Certificado VÁLIDO!';
-            }
+            $this->jsonResponse([
+                'status'   => $expirado ? 'expirado' : 'ok',
+                'cnpj'     => $certificado->getCnpj(),
+                'empresa'  => $certificado->getCompanyName(),
+                'validade' => $validTo->format('d/m/Y'),
+                'valid_to' => $validTo->format(\DateTimeInterface::ATOM),
+                'expirado' => $expirado,
+                'mensagem' => $expirado ? 'Certificado VENCIDO! Não é possivel mais usá-lo!' : 'Certificado VÁLIDO!',
+            ]);
         } catch (\Throwable $e) {
-            echo 'Erro ao carregar certificado: ' . $e->getMessage();
+            $this->jsonResponse([
+                'status'   => 'erro',
+                'mensagem' => 'Erro ao carregar certificado: ' . $e->getMessage(),
+                'erro'     => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -109,7 +116,7 @@ class ApiController
      * @param string $tipo
      * @param string $file
      */
-    public function download($tipo, $file)
+    public function download(string $tipo, string $file): void
     {
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, OPTIONS');
@@ -134,7 +141,7 @@ class ApiController
             header('Content-Disposition: ' . $disposition . '; filename="' . $file . '"');
             readfile($arq);
         } else {
-            header('HTTP/1.0 404 Not Found');
+            http_response_code(404);
             echo 'Arquivo nao encontrado!';
         }
         exit;
@@ -143,48 +150,57 @@ class ApiController
     /**
      * Rota POST /xml: Processamento de XML ou consulta por chave
      */
-    public function processXml()
+    public function processXml(): void
     {
         $res = [
             'status' => [],
             'url'    => [],
         ];
 
-        if (!isset($_POST['xml']) && !isset($_POST['chave'])) {
+        $xml = $_POST['xml'] ?? null;
+        $chave = $_POST['chave'] ?? null;
+
+        // Suporte adicional a payload JSON (Content-Type: application/json)
+        if ($xml === null && $chave === null) {
+            $raw = file_get_contents('php://input');
+            if (!empty($raw)) {
+                $jsonData = json_decode($raw, true);
+                if (is_array($jsonData)) {
+                    $xml = $jsonData['xml'] ?? null;
+                    $chave = $jsonData['chave'] ?? null;
+                }
+            }
+        }
+
+        if (empty($xml) && empty($chave)) {
             $res['status'] = 'Erro: sem dados';
-            echo json_encode($res);
-            exit();
+            $this->jsonResponse($res);
         }
 
-        if (!empty($_POST['xml'])) {
-            $this->processaEnvioXml($_POST['xml'], $res);
-            exit;
+        if (!empty($xml)) {
+            $this->processaEnvioXml($xml, $res);
         }
 
-        if (!empty($_POST['chave'])) {
-            $this->processaConsultaChave($_POST['chave'], $res);
-            exit;
+        if (!empty($chave)) {
+            $this->processaConsultaChave($chave, $res);
         }
     }
 
     /**
      * Processa recebimento de XML completo
      */
-    private function processaEnvioXml($nfe_xml, array $res)
+    private function processaEnvioXml(string $nfe_xml, array $res): void
     {
-        global $cfg;
-
         $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->preserveWhiteSpace = true;
         $dom->formatOutput = false;
-        if (!@$dom->loadXML($nfe_xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG) || $dom->getElementsByTagName("infNFe")->length == 0) {
+        if (!@$dom->loadXML($nfe_xml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG) || $dom->getElementsByTagName('infNFe')->length === 0) {
             $res['status'] = 'Erro ao processar XML: Não tem infNFe ou XML mal formado';
             $res['xml'] = [
                 'status'    => 'stop',
                 'estrutura' => 'Erro: Não tem infNFe ou XML mal formado',
             ];
-            echo json_encode($res);
-            return;
+            $this->jsonResponse($res);
         }
 
         try {
@@ -195,15 +211,13 @@ class ApiController
                 'status'    => 'stop',
                 'estrutura' => 'Erro ao processar XML: ' . $e->getMessage(),
             ];
-            echo json_encode($res);
-            return;
+            $this->jsonResponse($res);
         }
 
         $res['xml'] = $nfe->validaEstruturaXML($nfe_xml);
 
-        if ($res['xml']['status'] == 'stop') {
-            echo json_encode($res);
-            return;
+        if ($res['xml']['status'] === 'stop') {
+            $this->jsonResponse($res);
         }
 
         $res['xml'] = array_merge($res['xml'], $nfe->import($nfe_xml));
@@ -242,14 +256,14 @@ class ApiController
             }
             $res['prot'] = $prot;
 
-            if (($prot['status'] ?? '') == 'ok') {
+            if (($prot['status'] ?? '') === 'ok') {
                 $sefaz = [
                     'age'        => $prot['age'] ?? 0,
                     'cStat'      => $prot['cStat'] ?? '',
                     'xMotivo'    => $prot['xMotivo'] ?? '',
                     'dhConsulta' => $prot['dhConsulta'] ?? '',
                     'tpAmb'      => $prot['tpAmb'] ?? '',
-                    'versao'     => 'uspdev/NFE-WS ' . VERSAO,
+                    'versao'     => 'uspdev/NFE-WS ' . (defined('VERSAO') ? VERSAO : '2.0.8'),
                 ];
                 try {
                     $relat = $nfe->geraRelatorioSefaz($prot);
@@ -281,18 +295,17 @@ class ApiController
 
         $res['status'] = 'ok';
 
-        echo json_encode($res);
+        $this->jsonResponse($res);
     }
 
     /**
      * Processa consulta com chave da NFe
      */
-    private function processaConsultaChave($chaveInput, array $res)
+    private function processaConsultaChave(string $chaveInput, array $res): void
     {
         if (!$chave = NfeWs::validaChNFe($chaveInput)) {
             $res['status'] = 'Chave incorreta ' . strlen($chaveInput);
-            echo json_encode($res);
-            return;
+            $this->jsonResponse($res);
         }
 
         $res['chave'] = $chave;
@@ -315,6 +328,17 @@ class ApiController
 
         $res['xml']['status'] = 'sem xml';
         $res['status'] = 'ok';
-        echo json_encode($res);
+        $this->jsonResponse($res);
+    }
+
+    /**
+     * Emite resposta em formato JSON com headers adequados
+     */
+    private function jsonResponse(array $data, int $statusCode = 200): void
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data);
+        exit;
     }
 }

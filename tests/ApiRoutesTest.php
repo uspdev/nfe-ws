@@ -92,7 +92,7 @@ class ApiRoutesTest extends TestCase
         }
     }
 
-    private function makeRequest(string $method, string $path, $data = null, ?string $apiKey = null): array
+    private function makeRequest(string $method, string $path, $data = null, ?string $apiKey = null, array $extraHeaders = []): array
     {
         $url = self::$baseUrl . $path;
         $ch = curl_init($url);
@@ -104,6 +104,10 @@ class ApiRoutesTest extends TestCase
 
         if ($apiKey !== null) {
             $headers[] = 'X-API-Key: ' . $apiKey;
+        }
+
+        if (!empty($extraHeaders)) {
+            $headers = array_merge($headers, $extraHeaders);
         }
 
         if ($data !== null) {
@@ -164,14 +168,23 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa GET /status com credenciais validas
+     * Testa GET /status com credenciais validas retornando JSON
      */
     public function testGetStatusWithValidAuth(): void
     {
         $res = $this->makeRequest('GET', '/status', null, self::$testApiKey);
 
         $this->assertSame(200, $res['status']);
-        $this->assertStringContainsString('status', $res['body']);
+        $this->assertStringContainsString('application/json', (string)$res['type']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertSame('ok', $json['status']);
+        $this->assertArrayHasKey('cnpj', $json);
+        $this->assertArrayHasKey('empresa', $json);
+        $this->assertArrayHasKey('validade', $json);
+        $this->assertArrayHasKey('valid_to', $json);
+        $this->assertArrayHasKey('expirado', $json);
+        $this->assertArrayHasKey('mensagem', $json);
     }
 
     /**
@@ -278,5 +291,19 @@ class ApiRoutesTest extends TestCase
         $json = json_decode($res['body'], true);
         $this->assertIsArray($json);
         $this->assertStringContainsString('Erro ao processar XML', $json['status']);
+    }
+
+    /**
+     * Testa POST /xml com payload em formato JSON (Content-Type: application/json)
+     */
+    public function testPostXmlWithJsonPayload(): void
+    {
+        $payload = json_encode(['chave' => '12345']);
+        $res = $this->makeRequest('POST', '/xml', $payload, self::$testApiKey, ['Content-Type: application/json']);
+
+        $this->assertSame(200, $res['status']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertStringContainsString('Chave incorreta', $json['status']);
     }
 }

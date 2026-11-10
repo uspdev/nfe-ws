@@ -133,14 +133,6 @@ Alias /nfe-ws/api /caminho/para/nfe-ws/api
 </Directory>
 ```
 
-### Servidor Embutido do PHP (Desenvolvimento e Testes)
-
-Para executar o servidor localmente durante desenvolvimento:
-
-```bash
-php -S 127.0.0.1:8000 -t api
-```
-
 ---
 
 ## Endpoints da API
@@ -150,8 +142,8 @@ Todas as rotas da API (exceto a página inicial `GET /`) exigem autenticação v
 | Método | Rota | Autenticação | Descrição |
 |---|---|---|---|
 | `GET` | `/` | Pública | Página inicial com documentação resumida. |
-| `GET` | `/status` | Requerida | Retorna a validade e dados do certificado digital instalado. |
-| `POST` | `/xml` | Requerida | Envia o XML da nota fiscal (`$_POST['xml']`) ou a chave (`$_POST['chave']`) para validação, consulta na SEFAZ e geração dos PDFs (DANFE e protocolo). |
+| `GET` | `/status` | Requerida | Retorna a validade e dados do certificado digital instalado em formato JSON. |
+| `POST` | `/xml` | Requerida | Envia o XML da nota fiscal (`xml`) ou a chave (`chave`) via POST form ou JSON body para validação, consulta na SEFAZ e geração dos PDFs (DANFE e protocolo). |
 | `GET` | `/danfe/<arquivo>` | Requerida | Download do DANFE em PDF gerado. |
 | `GET` | `/sefaz/<arquivo>` | Requerida | Download do relatório de protocolo da SEFAZ em PDF. |
 | `GET` | `/xml/<arquivo>` | Requerida | Download do XML da nota fiscal armazenado. |
