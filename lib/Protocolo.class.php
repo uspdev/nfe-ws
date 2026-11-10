@@ -6,13 +6,18 @@ use NFePHP\Common\Soap\SoapCurl;
 use NFePHP\NFe\Tools as NfeTools;
 use NFePHP\NFe\Common\Standardize;
 
+#[\AllowDynamicProperties]
 class Protocolo extends Common
 {
 
     // chave da nfe
     public $chNFe;
+    public $chave;
+    public $xml;
+    public $local;
+    public $tools;
+    public $c;
     protected $prot;
-    protected $c;
 
     public function __construct()
     {
@@ -31,10 +36,8 @@ class Protocolo extends Common
         ];
         //monta o config.json
         $configJson = json_encode($arr);
-        //carrega o conteudo do certificado.
-        $cert = file_get_contents($this->c->certFile);
 
-        $certificate = Certificate::readPfx($cert, $this->c->certPwd);
+        $certificate = $this->c->getCertificate();
         $soap = new SoapCurl($certificate);
         $soap->httpVersion('1.1');
 
@@ -63,7 +66,7 @@ class Protocolo extends Common
      */
     public function consulta($chave)
     {
-        $maxage = 60 * 10; // caso tenha mais de 10 mins, consulta de novo a sefaz.
+        $maxage = $this->c->cacheSefazTtl; // configurado em config.php (padrao: 600 segundos)
 
         if (!$this->chNFe = nfe_ws::validaChNFe($chave)) {
             return false;

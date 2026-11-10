@@ -3,8 +3,7 @@ local/
 vendor/
 config.php
 
-.htaccess
-
 # phpstorm
 .idea
+.phpunit.cache/
 

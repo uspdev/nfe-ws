@@ -12,6 +12,8 @@ if (php_sapi_name() != 'cli') {
     exit();
 }
 
+chdir(__DIR__);
+
 function green($str)
 {
     return "\033[0;32m" . $str . "\033[0;37m";
@@ -24,14 +26,23 @@ function red($str)
 
 function le_config()
 {
-    global $config, $ok, $cfg;
-    if (!is_file('./config.php')) {
-        copy('./config.sample.php', './config.php');
+    global $ok, $cfg;
+    if (!is_file(__DIR__ . '/config.php')) {
+        if (!copy(__DIR__ . '/config.sample.php', __DIR__ . '/config.php')) {
+            $ok = false;
+            return red('Erro!') . "\n    Não foi possível criar config.php.";
+        }
+        include_once __DIR__ . '/config.php';
+        $cfg['url'] = parse_url($cfg['baseUrl']);
         $msg = red('Erro!') . "\n";
-        $msg .= "    Edite o arquivo config.php e corrija o caminho da aplicação.\n";
+        $msg .= "    config.php foi criado. Edite as configuracoes locais antes de continuar.\n";
         $ok = false;
     } else {
-        include_once './config.php';
+        include_once __DIR__ . '/config.php';
+        if (empty($cfg['baseUrl'])) {
+            $ok = false;
+            return red('Erro!') . "\n    baseUrl não definida em config.php.";
+        }
         $cfg['url'] = parse_url($cfg['baseUrl']);
         $msg = green("OK!");
     }
@@ -40,41 +51,35 @@ function le_config()
 
 function composer()
 {
-    $sai = [];
-    exec('composer install 2>&1', $sai);
-    if ($sai[2] == 'Nothing to install or update') {
-        $msg = green('OK!');
-    } else {
-        $msg = implode($sai, "\n");
+    global $ok;
+    $output = [];
+    $status = 0;
+    exec('composer install --no-interaction 2>&1', $output, $status);
+
+    if ($status === 0) {
+        return green('OK!');
     }
-    return $msg;
+
+    $ok = false;
+    return red('Erro!') . "\n" . implode("\n", $output);
 }
 
 function verifica_htaccess()
 {
-    global $config, $ok, $cfg;
-    if ($ok) {
-        $file = realpath(dirname(__FILE__)) . '/api/sample.htaccess';
-        $htaccess = file($file);
-        $out = '';
-        $save = false;
-        foreach ($htaccess as $line) {
-            $parms = explode(" ", $line);
-            if ($parms[0] == 'RewriteBase') {
-                $line = $parms[0] . ' ' . $cfg['url']['path'] . 'api/' . "\n";
-                $msg = green("OK -> ") . $cfg['url']['path'] . 'api/';
-                $save = true;
-            }
-            $out .= $line;
+    global $ok;
+
+    $destination = __DIR__ . '/api/.htaccess';
+
+    if (!is_file($destination)) {
+        $content = "RewriteEngine On\n\nRewriteRule .* - [E=HTTP_X_API_KEY:%{HTTP:X-API-Key}]\n\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ index.php [QSA,L]\n";
+        if (@file_put_contents($destination, $content) === false) {
+            $ok = false;
+            return red("Erro!") . " Arquivo {$destination} não encontrado e não foi possível criá-lo.";
         }
-        if ($save == true) {
-            file_put_contents(__DIR__ . '/api/.htaccess', $out);
-        }
-    } else {
-        $msg = red("Erro!\n");
-        $msg .= "    Depende do arquivo de configuração.";
+        return green("Criado com sucesso");
     }
-    return $msg;
+
+    return green("OK");
 }
 
 function verifica_certificado()
@@ -83,8 +88,8 @@ function verifica_certificado()
 
     if (!is_file($cfg['cert_file'])) {
         $msg = red("Erro!") . PHP_EOL;
-        $msg .= "    Voce deve ter um certificado ICP BRASIL válido no formato pfx na pasta data/certs\n";
-        $msg .= "    para poder realizar consultas na Sefaz.\n";
+        $msg .= "    Voce deve ter um certificado ICP BRASIL valido em formato PFX.\n";
+        $msg .= "    Caminho configurado: {$cfg['cert_file']}\n";
         $ok = false;
     } else {
         $msg = green('OK');
@@ -101,22 +106,36 @@ function seta_permissao()
 
 function verifica_pastas()
 {
-    global $cfg;
+    global $cfg, $ok;
 
-    if (!is_dir($cfg['local'])) {
-        $msg = 'Criando ' . $cfg['local'] . ' ..';
-        mkdir($cfg['local']);
-
-    } else {
-        $msg = 'Pasta já existe ..';
+    $dirs = [$cfg['local'], dirname($cfg['cert_file']), dirname($cfg['pwdFile'])];
+    foreach (array_unique($dirs) as $dir) {
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            $ok = false;
+            return red('Erro!') . " Não foi possível criar {$dir}";
+        }
     }
 
-    return $msg . green(' OK');
+    return green('OK');
 }
 
 function verifica_permissao()
 {
-    return red('Ainda não implementado !!');
+    global $ok, $cfg;
+
+    if (empty($cfg['local'])) {
+        return red('Ainda não configurado !!');
+    }
+
+    $paths = [$cfg['local'], dirname($cfg['pwdFile'])];
+    foreach ($paths as $path) {
+        if (!is_dir($path) || (!is_writable($path))) {
+            $ok = false;
+            return red("Erro!") . " Sem permissão de escrita em {$path}";
+        }
+    }
+
+    return green('OK');
 }
 
 function verifica_usuario()
@@ -129,12 +148,12 @@ function verifica_usuario()
 
     } else {
         $users = unserialize(file_get_contents($cfg['pwdFile']));
-        if (empty($users)) {
+        if (!is_array($users) || empty($users)) {
             $msg = red('Erro - sem usuários cadastrados');
             $ok = false;
+        } else {
+            $msg = green('OK');
         }
-
-        $msg = green('OK');
     }
 
     return $msg;
@@ -170,7 +189,7 @@ echo verifica_usuario() . PHP_EOL;
 
 echo "\n";
 if ($ok) {
-    echo "Já pode usar acessando http://<seu servidor>" . $cfg['url']['path'] . 'api/' . "\n\n";
+    echo "Já pode usar acessando " . rtrim($cfg['baseUrl'], '/') . '/api/' . "\n\n";
 } else {
     echo "** Há pendências a serem corrigidas!\n\n";
 }
