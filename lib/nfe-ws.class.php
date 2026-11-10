@@ -7,8 +7,13 @@ use NFePHP\DA\Legacy\Common;
 use NFePHP\DA\NFe\Danfe;
 
 
+#[\AllowDynamicProperties]
 class nfe_ws extends Danfe
 {
+    public $c;
+    public $nfeProc;
+    public $versao;
+    public $total;
     protected $local;
     protected $tools;
     protected $xml;
@@ -89,6 +94,14 @@ class nfe_ws extends Danfe
         }
         $chave = $this->retornaChave();
         $danfeArq = $this->local . $chave . '-danfe.pdf';
+
+        // Evita re-renderização se o PDF do DANFE já existir em disco
+        if ($this->c->cachePdf && is_file($danfeArq) && filesize($danfeArq) > 0) {
+            $res['url'] = $this->c->baseUrl . 'danfe/' . $chave . '-danfe.pdf';
+            $res['status'] = 'ok';
+            $res['cached'] = true;
+            return $res;
+        }
 
         $danfe = new Danfe($this->xml, 'P', 'A4', '', 'I', '');
         $id = $danfe->montaDANFE();
@@ -352,13 +365,23 @@ class nfe_ws extends Danfe
         if ($debug) echo 'arq_proto_pdf = ' . $arq_proto_pdf;
         if ($debug) echo "\nGera protocolo: ";
 
+        if (empty($this->prot) || ($this->prot['status'] ?? '') != 'ok') {
+            return false;
+        }
+
+        // Se o PDF do relatório já existe e a consulta SEFAZ veio do cache (age > 0), reutiliza
+        if ($this->c->cachePdf && is_file($arq_proto_pdf) && filesize($arq_proto_pdf) > 0 && !empty($this->prot['age'])) {
+            $ret['url'] = $arq_proto_url;
+            $ret['cached'] = true;
+            return $ret;
+        }
 
         if (!file_exists($arq_xml)) {
             if ($debug) echo "Arquivo xml inexistente! Processo abortado.\n";
             return false;
         }
 
-        $tpl = new \raelgc\view\Template(__DIR__ . '/protocolo.tpl');
+        $tpl = new \raelgc\view\Template(__DIR__ . '/../templates/protocolo.tpl');
 
         $xml = new DomDocument();
         $xml->loadXml(file_get_contents($arq_xml));
@@ -520,7 +543,7 @@ class nfe_ws extends Danfe
         $rodape .= $tpl->dhConsulta;
         $pdf->writeHTMLCell(0, 0, '', '', $rodape, 'T', 0, 0, true, 'C');
 
-        $pdf->Image(__DIR__ . '/logo_usp.png', 210 - 45, 297 - 14, 25);
+        $pdf->Image(__DIR__ . '/../templates/images/logo_usp.png', 210 - 45, 297 - 14, 25);
 
         $pdf->Output($arq_proto_pdf, 'F');
         //$ret['file'] = $arq_proto_pdf;
