@@ -54,19 +54,19 @@ class Auth
     public function authenticate(string $apiKey): array
     {
         if (trim($apiKey) === '') {
-            Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'API key missing']);
+            Logger::log('AUTH', ['status' => 'REJECTED', 'name' => '-', 'message' => 'API key missing']);
             throw new AuthException("Você deve informar uma API key válida para acessar este recurso\n", 401);
         }
 
         if (!is_file($this->config->pwdFile)) {
-            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'passwd file missing']);
+            Logger::log('AUTH', ['status' => 'ERROR', 'name' => '-', 'message' => 'passwd file missing']);
             throw new AuthException('Este webservice ainda não foi configurado!', 500);
         }
 
         $content = file_get_contents($this->config->pwdFile);
         $keys = json_decode($content, true);
         if (!is_array($keys)) {
-            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'invalid passwd json format']);
+            Logger::log('AUTH', ['status' => 'ERROR', 'name' => '-', 'message' => 'invalid passwd json format']);
             throw new AuthException('Formato do arquivo de credenciais inválido!', 500);
         }
 
@@ -75,7 +75,7 @@ class Auth
         foreach ($keys as $entry) {
             if (is_array($entry) && isset($entry['hash']) && hash_equals($entry['hash'], $apiKeyHash)) {
                 if (!empty($entry['revoked_at'])) {
-                    Logger::log('AUTH', ['status' => 'REVOKED', 'user' => $entry['name'] ?? '-', 'message' => 'API key revoked']);
+                    Logger::log('AUTH', ['status' => 'REVOKED', 'name' => $entry['name'] ?? '-', 'message' => 'API key revoked']);
                     throw new AuthException('Credenciais revogadas', 401);
                 }
 
@@ -83,13 +83,13 @@ class Auth
                     \Flight::set('currentUser', $entry);
                 }
 
-                Logger::log('AUTH', ['status' => 'ACCEPTED', 'user' => $entry['name'] ?? 'unknown']);
+                Logger::log('AUTH', ['status' => 'ACCEPTED', 'name' => $entry['name'] ?? 'unknown']);
 
                 return $entry;
             }
         }
 
-        Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'Invalid API key']);
+        Logger::log('AUTH', ['status' => 'REJECTED', 'name' => '-', 'message' => 'Invalid API key']);
         throw new AuthException('Credenciais inválidas', 401);
     }
 }

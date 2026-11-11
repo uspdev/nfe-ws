@@ -28,6 +28,35 @@ class Logger
     }
 
     /**
+     * Obtém o IP real do cliente considerando possíveis proxies reversos
+     */
+    public static function getClientIp(): string
+    {
+        $headers = [
+            'HTTP_CF_CONNECTING_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CLIENT_IP',
+            'REMOTE_ADDR',
+        ];
+
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                // Header como X-Forwarded-For pode conter múltiplos IPs separados por vírgula (ex: "client, proxy1, proxy2")
+                $ips = explode(',', (string) $_SERVER[$header]);
+                foreach ($ips as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? 'CLI';
+    }
+
+    /**
      * Registra uma linha de log com rotacao diaria (ex: access-2026-11-11.log)
      */
     public static function log(string $action, array $context = []): void
@@ -38,20 +67,20 @@ class Logger
             $file = $dir . "/access-{$date}.log";
 
             $timestamp = date('c');
-            $ip = $_SERVER['REMOTE_ADDR'] ?? 'CLI';
+            $ip = self::getClientIp();
             $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
             $uri = $_SERVER['REQUEST_URI'] ?? '-';
 
-            $user = $context['user'] ?? '-';
+            $name = $context['name'] ?? $context['user'] ?? '-';
             $status = $context['status'] ?? '-';
             $message = $context['message'] ?? '';
 
             $entry = sprintf(
-                "[%s] [%s] [%s] user=%s method=%s uri=%s ip=%s %s\n",
+                "[%s] [%s] [%s] name=%s method=%s uri=%s ip=%s %s\n",
                 $timestamp,
                 $action,
                 $status,
-                $user,
+                $name,
                 $method,
                 $uri,
                 $ip,
