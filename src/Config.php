@@ -107,7 +107,7 @@ class Config
 
         $this->certPwd = (string)env('NFE_CERT_PASSWORD', '');
 
-        $pwdRaw = env('NFE_PASSWD_FILE', 'local/passwd.txt');
+        $pwdRaw = env('NFE_PASSWD_FILE', 'local/passwd.json');
         $this->pwdFile = $this->resolvePath($pwdRaw);
 
         // 3. Rede e comportamento

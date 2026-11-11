@@ -37,11 +37,24 @@ class ApiRoutesTest extends TestCase
             mkdir($pwdDir, 0775, true);
         }
 
-        // Cria API key de teste temporaria
+        // Cria API key de teste temporaria no formato JSON
         $testKeys = [
-            'test_ws_client' => hash('sha256', self::$testApiKey),
+            [
+                'name'        => 'test_ws_client',
+                'hash'        => hash('sha256', self::$testApiKey),
+                'description' => 'Test key',
+                'created_at'  => date('c'),
+                'revoked_at'  => null,
+            ],
+            [
+                'name'        => 'revoked_ws_client',
+                'hash'        => hash('sha256', 'revoked-key-secret'),
+                'description' => 'Revoked test key',
+                'created_at'  => date('c'),
+                'revoked_at'  => date('c'),
+            ],
         ];
-        file_put_contents(self::$pwdFilePath, serialize($testKeys));
+        file_put_contents(self::$pwdFilePath, json_encode($testKeys, JSON_PRETTY_PRINT));
 
         // Inicia o servidor embutido do PHP apontando para o router de testes
         $cmd = sprintf(
@@ -165,6 +178,17 @@ class ApiRoutesTest extends TestCase
 
         $this->assertSame(401, $res['status']);
         $this->assertStringContainsString('Credenciais inválidas', $res['body']);
+    }
+
+    /**
+     * Testa acesso a rota protegida com chave revogada
+     */
+    public function testProtectedEndpointWithRevokedCredentialsReturns401(): void
+    {
+        $res = $this->makeRequest('GET', '/status', null, 'revoked-key-secret');
+
+        $this->assertSame(401, $res['status']);
+        $this->assertStringContainsString('Credenciais revogadas', $res['body']);
     }
 
     /**

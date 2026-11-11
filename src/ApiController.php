@@ -45,31 +45,57 @@ class ApiController
         }
 
         if ($apiKey === '') {
+            Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'API key missing']);
             http_response_code(401);
             echo "Você deve informar uma API key válida para acessar este recurso\n";
             exit;
         }
 
         if (!is_file($this->config->pwdFile)) {
+            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'passwd file missing']);
             http_response_code(500);
             echo 'Este webservice ainda não foi configurado!';
             exit();
         }
 
-        $usrs = unserialize(file_get_contents($this->config->pwdFile));
-        $valid = false;
+        $content = file_get_contents($this->config->pwdFile);
+        $keys = json_decode($content, true);
+        if (!is_array($keys)) {
+            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'invalid passwd json format']);
+            http_response_code(500);
+            echo 'Formato do arquivo de credenciais inválido!';
+            exit();
+        }
+
+        $authenticatedUser = null;
         $apiKeyHash = hash('sha256', $apiKey);
-        foreach ($usrs as $storedHash) {
-            if (is_string($storedHash) && hash_equals($storedHash, $apiKeyHash)) {
-                $valid = true;
-                break;
+
+        foreach ($keys as $entry) {
+            if (is_array($entry) && isset($entry['hash']) && hash_equals($entry['hash'], $apiKeyHash)) {
+                if (empty($entry['revoked_at'])) {
+                    $authenticatedUser = $entry;
+                    break;
+                } else {
+                    Logger::log('AUTH', ['status' => 'REVOKED', 'user' => $entry['name'] ?? '-', 'message' => 'API key revoked']);
+                    http_response_code(401);
+                    echo 'Credenciais revogadas';
+                    exit();
+                }
             }
         }
-        if (!$valid) {
+
+        if ($authenticatedUser === null) {
+            Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'Invalid API key']);
             http_response_code(401);
             echo 'Credenciais inválidas';
             exit();
         }
+
+        if (class_exists(\Flight::class)) {
+            \Flight::set('currentUser', $authenticatedUser);
+        }
+
+        Logger::log('AUTH', ['status' => 'ACCEPTED', 'user' => $authenticatedUser['name'] ?? 'unknown']);
 
         if (!is_dir($this->config->local)) {
             http_response_code(500);
@@ -170,11 +196,11 @@ class ApiController
         }
 
         if (!empty($xml)) {
-            $this->jsonResponse(NfeWs::processarEnvioXml($xml));
+            $this->jsonResponse(Nfe::processarEnvioXml($xml));
         }
 
         if (!empty($chave)) {
-            $this->jsonResponse(NfeWs::processarConsultaChave($chave));
+            $this->jsonResponse(Nfe::processarConsultaChave($chave));
         }
     }
 

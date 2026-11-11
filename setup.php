@@ -140,12 +140,24 @@ function verifica_usuario($config)
         $msg = red('Erro - sem arquivo de usuários/API keys');
         $ok = false;
     } else {
-        $users = @unserialize(file_get_contents($config->pwdFile));
-        if (!is_array($users) || empty($users)) {
-            $msg = red('Erro - sem usuários cadastrados. Execute: php users.php add <nome>');
+        $content = file_get_contents($config->pwdFile);
+        $keys = json_decode($content, true);
+        if (!is_array($keys)) {
+            $msg = red('Erro - formato JSON inválido no arquivo de API keys');
             $ok = false;
         } else {
-            $msg = green('OK');
+            $activeCount = 0;
+            foreach ($keys as $key) {
+                if (is_array($key) && empty($key['revoked_at'])) {
+                    $activeCount++;
+                }
+            }
+            if ($activeCount === 0) {
+                $msg = red('Erro - sem chaves ativas cadastradas. Execute: php key.php add <nome>');
+                $ok = false;
+            } else {
+                $msg = green("OK ({$activeCount} chave(s) ativa(s))");
+            }
         }
     }
 

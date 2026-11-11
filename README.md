@@ -48,7 +48,7 @@ Edite as configurações de acordo com o seu ambiente:
 - **`NFE_LOCAL_PATH`**: Diretório onde os arquivos de NF-e (XMLs, DANFEs em PDF e protocolos) são gravados (ex: `local/recebidas/`).
 - **`NFE_CERT_FILE`**: Caminho para o certificado digital A1 em formato `.pfx` (ex: `local/certs/certificado.pfx`).
 - **`NFE_CERT_PASSWORD`**: Senha do certificado digital.
-- **`NFE_PASSWD_FILE`**: Caminho do arquivo que armazena os hashes das API keys (ex: `local/passwd.txt`).
+- **`NFE_PASSWD_FILE`**: Caminho do arquivo que armazena os registros e hashes das API keys em formato JSON (ex: `local/passwd.json`).
 - **`NFE_BASE_URL`**: URL base pública do webservice terminada em barra (ex: `https://servidor/nfe-ws/api/`). É utilizada na composição dos links de retorno para download de arquivos gerados.
 - **`NFE_DEBUG`**: Booleano (`true`/`false`) para exibir informações adicionais de depuração.
 - **`NFE_CACHE_SEFAZ_TTL`**: Tempo em segundos de validade do cache local da consulta SEFAZ (evita Rejeição 656: Consumo Indevido). Padrão: `600` (10 minutos).
@@ -90,28 +90,31 @@ A autenticação da API é realizada por **API key** enviada nas requisições a
 X-API-Key: <sua-api-key>
 ```
 
-> **Segurança:** O servidor armazena apenas o hash **SHA-256** das chaves geradas no arquivo configurado em `pwdFile` (`local/passwd.txt`).
+> **Segurança:** O servidor armazena apenas o hash **SHA-256** das chaves geradas no arquivo configurado em `pwdFile` (`local/passwd.json`).
+> Além disso, todas as tentativas de autenticação e acessos com as chaves são registradas em logs diários em `local/logs/access-YYYY-MM-DD.log`.
 
-O gerenciamento de credenciais é feito exclusivamente por linha de comando através do script `users.php`:
+O gerenciamento de credenciais é feito exclusivamente por linha de comando através do script `key.php`:
 
 ### Adicionar uma nova API key
 
 ```bash
-php users.php add nome-do-cliente
+php key.php add nome-do-cliente "Descrição opcional"
 ```
 
 Ao executar este comando, uma chave criptográfica de 64 caracteres hexadecimais será gerada e exibida no terminal. Guarde-a imediatamente em local seguro, pois ela não será exibida novamente.
 
-### Listar clientes cadastrados
+### Listar API keys cadastradas
 
 ```bash
-php users.php list
+php key.php list
 ```
 
-### Remover uma API key
+Exibe o nome, descrição, data de criação e status (Ativa ou Revogada).
+
+### Revogar uma API key
 
 ```bash
-php users.php del nome-do-cliente
+php key.php revoke nome-do-cliente
 ```
 
 ---

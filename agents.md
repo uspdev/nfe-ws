@@ -42,11 +42,13 @@ nfe-ws/
 ├── src/                        # Classes PSR-4 (namespace Uspdev\NfeWs)
 │   ├── ApiController.php       # Controlador das rotas da API e autenticação
 │   ├── Config.php              # Carregamento e abstração das configurações via .env
-│   ├── NfeWs.php               # Lógica principal de validação, consulta SEFAZ e geração de PDF
-│   ├── Protocolo.php           # Extração e normalização de dados do protocolo da SEFAZ
+│   ├── Nfe.php                 # Tratamento, validação e assinatura do XML da NF-e e geração de DANFE
+│   ├── Sefaz.php               # Comunicação SOAP com a SEFAZ e gerenciamento de cache de protocolos
+│   ├── Protocolo.php           # Extração/parse dos dados do protocolo SEFAZ e geração de PDF do protocolo
+│   ├── NfeWs.php               # Fachada de compatibilidade herdando de Nfe
 │   ├── Storage.php             # Utilitários de mapeamento de códigos da NF-e e SEFAZ
-│   ├── Tools.php               # Extensão utilitária de comunicação com a SEFAZ
-│   └── helpers.php             # Funções globais helper (env, config) e aliases legados
+│   ├── Tools.php               # Extensão utilitária de formatação e conversão
+│   └── helpers.php             # Funções globais helper (env, config)
 ├── templates/                  # Templates e arquivos visuais de apresentação
 │   ├── index.tpl               # Template HTML da página inicial e documentação básica
 │   ├── protocolo.tpl           # Template HTML base para geração do PDF do protocolo SEFAZ
@@ -55,14 +57,15 @@ nfe-ws/
 ├── local/                      # Dados locais (ignorado no controle de versão)
 │   ├── certs/                  # Certificado ICP-Brasil (.pfx)
 │   ├── recebidas/              # Armazenamento de XMLs e PDFs gerados
-│   └── passwd.txt              # Usuários e senhas serializados
+│   ├── logs/                   # Logs de acesso com rotação diária (access-YYYY-MM-DD.log)
+│   └── passwd.json             # Registro de API keys em formato JSON
 ├── testes/                     # Exemplos de XMLs e scripts manuais de verificação
 ├── tests/                      # Testes automatizados (PHPUnit)
 │   └── ApiRoutesTest.php       # Testes de integração das rotas da API
 ├── .env                       # Configurações ativas do ambiente (não versionado)
 ├── .env.example               # Exemplo de variáveis de ambiente
 ├── setup.php                   # Script CLI para verificação e diagnóstico de requisitos
-├── users.php                   # Script CLI para gerenciar credenciais de acesso
+├── key.php                     # Script CLI para gerenciar credenciais de acesso
 ├── composer.json               # Gerenciador de dependências PHP
 └── phpunit.xml                 # Configuração da suíte de testes do PHPUnit
 ```
@@ -98,20 +101,21 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
 
 ### Autenticação via API Key:
 * Gerenciada diretamente pela aplicação no middleware de rota (`ApiController::authenticate`).
-* O cliente envia a chave no cabeçalho HTTP `X-API-Key`.
-* As chaves são strings aleatórias seguras (64 hex) e apenas seus hashes SHA-256 são armazenados em `$cfg['pwdFile']` (`local/passwd.txt`) como um array associativo serializado.
+* O cliente envia a chave no cabeçalho HTTP `X-API-Key` (ou parâmetro de query string).
+* As chaves são strings aleatórias seguras (64 hex) e armazenadas em `$cfg['pwdFile']` (`local/passwd.json`) como um array estruturado em formato JSON contendo `name`, `hash` (SHA-256), `description`, `created_at` e `revoked_at`.
+* Todas as requisições autenticadas ou com falha de autenticação geram logs dedicados com rotação diária em `local/logs/access-YYYY-MM-DD.log`.
 * Gerenciamento via CLI:
   ```bash
-  php users.php add <nome>
-  php users.php list
-  php users.php del <nome>
+  php key.php add <nome> [descricao]
+  php key.php list
+  php key.php revoke <nome>
   ```
 
 ### Arquivo `.env`:
 * `NFE_LOCAL_PATH`: Caminho de gravação dos arquivos (`local/recebidas/`).
 * `NFE_CERT_FILE`: Caminho do certificado A1 (`.pfx`).
 * `NFE_CERT_PASSWORD`: Senha do certificado digital.
-* `NFE_PASSWD_FILE`: Caminho do arquivo de senhas/API keys (`local/passwd.txt`).
+* `NFE_PASSWD_FILE`: Caminho do arquivo de senhas/API keys (`local/passwd.json`).
 * `NFE_BASE_URL`: URL base da aplicação para composição dos links de retorno.
 * `NFE_DEBUG`: Booleano para exibição de detalhes de erro.
 * `NFE_CACHE_SEFAZ_TTL`: Tempo de vida (TTL) em segundos da consulta SEFAZ em cache local (padrão: `600`).
