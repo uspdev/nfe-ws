@@ -24,78 +24,17 @@ class ApiController
      */
     public function authenticate()
     {
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-API-Key, Authorization');
+        Auth::handleCors();
 
-        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS' || isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
-            echo 'OK';
-            exit;
-        }
-
-        $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? $_SERVER['X_API_KEY'] ?? $_GET['api_key'] ?? $_GET['key'] ?? '';
-        if ($apiKey === '' && function_exists('getallheaders')) {
-            $headers = getallheaders();
-            foreach ($headers as $name => $value) {
-                if (strcasecmp($name, 'X-API-Key') === 0) {
-                    $apiKey = $value;
-                    break;
-                }
-            }
-        }
-
-        if ($apiKey === '') {
-            Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'API key missing']);
-            http_response_code(401);
-            echo "Você deve informar uma API key válida para acessar este recurso\n";
-            exit;
-        }
-
-        if (!is_file($this->config->pwdFile)) {
-            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'passwd file missing']);
-            http_response_code(500);
-            echo 'Este webservice ainda não foi configurado!';
+        try {
+            $apiKey = Auth::extractApiKey();
+            $auth = new Auth($this->config);
+            $auth->authenticate($apiKey);
+        } catch (AuthException $e) {
+            http_response_code($e->getCode());
+            echo $e->getMessage();
             exit();
         }
-
-        $content = file_get_contents($this->config->pwdFile);
-        $keys = json_decode($content, true);
-        if (!is_array($keys)) {
-            Logger::log('AUTH', ['status' => 'ERROR', 'user' => '-', 'message' => 'invalid passwd json format']);
-            http_response_code(500);
-            echo 'Formato do arquivo de credenciais inválido!';
-            exit();
-        }
-
-        $authenticatedUser = null;
-        $apiKeyHash = hash('sha256', $apiKey);
-
-        foreach ($keys as $entry) {
-            if (is_array($entry) && isset($entry['hash']) && hash_equals($entry['hash'], $apiKeyHash)) {
-                if (empty($entry['revoked_at'])) {
-                    $authenticatedUser = $entry;
-                    break;
-                } else {
-                    Logger::log('AUTH', ['status' => 'REVOKED', 'user' => $entry['name'] ?? '-', 'message' => 'API key revoked']);
-                    http_response_code(401);
-                    echo 'Credenciais revogadas';
-                    exit();
-                }
-            }
-        }
-
-        if ($authenticatedUser === null) {
-            Logger::log('AUTH', ['status' => 'REJECTED', 'user' => '-', 'message' => 'Invalid API key']);
-            http_response_code(401);
-            echo 'Credenciais inválidas';
-            exit();
-        }
-
-        if (class_exists(\Flight::class)) {
-            \Flight::set('currentUser', $authenticatedUser);
-        }
-
-        Logger::log('AUTH', ['status' => 'ACCEPTED', 'user' => $authenticatedUser['name'] ?? 'unknown']);
 
         if (!is_dir($this->config->local)) {
             http_response_code(500);
