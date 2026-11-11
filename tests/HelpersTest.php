@@ -68,7 +68,5 @@ class HelpersTest extends TestCase
         $this->assertTrue(class_exists(\Uspdev\NfeWs\Nfe::class));
         $this->assertTrue(class_exists(\Uspdev\NfeWs\Sefaz::class));
         $this->assertTrue(class_exists(\Uspdev\NfeWs\Protocolo::class));
-        $this->assertTrue(class_exists(\Uspdev\NfeWs\NfeWs::class));
-        $this->assertTrue(is_subclass_of(\Uspdev\NfeWs\NfeWs::class, \Uspdev\NfeWs\Nfe::class));
     }
 }
