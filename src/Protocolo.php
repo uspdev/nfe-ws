@@ -163,13 +163,13 @@ class Protocolo
 
         if ($nfe->versao > 3) {
             $indFinal = $nfe->ide->getElementsByTagName('indFinal')->item(0)->nodeValue ?? '';
-            $tpl->indFinal = $indFinal !== '' ? $indFinal . ' - ' . Storage::indFinal($indFinal) : '';
+            $tpl->indFinal = $indFinal !== '' ? $indFinal . ' - ' . Tabelas::indFinal($indFinal) : '';
 
             $indPres = $nfe->ide->getElementsByTagName('indPres')->item(0)->nodeValue ?? '';
-            $tpl->indPres = $indPres !== '' ? $indPres . ' - ' . Storage::indPres($indPres) : '';
+            $tpl->indPres = $indPres !== '' ? $indPres . ' - ' . Tabelas::indPres($indPres) : '';
 
             $idDest = $nfe->ide->getElementsByTagName('idDest')->item(0)->nodeValue ?? '';
-            $tpl->idDest = $idDest !== '' ? $idDest . ' - ' . Storage::idDest($idDest) : '';
+            $tpl->idDest = $idDest !== '' ? $idDest . ' - ' . Tabelas::idDest($idDest) : '';
         }
 
         $tpl->vNF = str_replace('.', ',', $nfe->total->getElementsByTagName('vNF')->item(0)->nodeValue ?? '0,00');
@@ -194,30 +194,30 @@ class Protocolo
         $tpl->destUF = $nfe->dest->getElementsByTagName('UF')->item(0)->nodeValue ?? '';
 
         $procEmi = $nfe->ide->getElementsByTagName('procEmi')->item(0)->nodeValue ?? '';
-        $tpl->procEmi = $procEmi !== '' ? $procEmi . ' - ' . Storage::procEmi($procEmi) : '';
+        $tpl->procEmi = $procEmi !== '' ? $procEmi . ' - ' . Tabelas::procEmi($procEmi) : '';
         $tpl->verProc = $nfe->ide->getElementsByTagName('verProc')->item(0)->nodeValue ?? '';
 
         $tpEmis = $nfe->ide->getElementsByTagName('tpEmis')->item(0)->nodeValue ?? '';
-        $tpl->tpEmis = $tpEmis !== '' ? $tpEmis . ' - ' . Storage::tpEmis($tpEmis) : '';
+        $tpl->tpEmis = $tpEmis !== '' ? $tpEmis . ' - ' . Tabelas::tpEmis($tpEmis) : '';
 
         $finNFe = $nfe->ide->getElementsByTagName('finNFe')->item(0)->nodeValue ?? '';
-        $tpl->finNFe = $finNFe !== '' ? $finNFe . ' - ' . Storage::finNFe($finNFe) : '';
+        $tpl->finNFe = $finNFe !== '' ? $finNFe . ' - ' . Tabelas::finNFe($finNFe) : '';
 
         $tpl->natOp = $nfe->ide->getElementsByTagName('natOp')->item(0)->nodeValue ?? '';
 
         $tpNF = $nfe->ide->getElementsByTagName('tpNF')->item(0)->nodeValue ?? '';
-        $tpl->tpNF = $tpNF !== '' ? $tpNF . ' - ' . Storage::tpNF($tpNF) : '';
+        $tpl->tpNF = $tpNF !== '' ? $tpNF . ' - ' . Tabelas::tpNF($tpNF) : '';
 
         if ($nfe->versao >= 4) {
             $tpl->indPag = '';
         } else {
             $indPag = $nfe->ide->getElementsByTagName('indPag')->item(0)->nodeValue ?? '';
-            $tpl->indPag = $indPag !== '' ? $indPag . ' - ' . Storage::indPag($indPag) : '';
+            $tpl->indPag = $indPag !== '' ? $indPag . ' - ' . Tabelas::indPag($indPag) : '';
         }
 
         $tpl->digestValue = $nfe->dom->getElementsByTagName('DigestValue')->item(0)->nodeValue ?? '';
-        $tpl->situacao = mb_strtoupper(Storage::cStat($prot['cStat'] ?? ''), 'UTF-8');
-        $tpl->tpAmb = mb_strtoupper(Storage::tpAmb($prot['tpAmb'] ?? ''), 'UTF-8');
+        $tpl->situacao = mb_strtoupper(Tabelas::cStat($prot['cStat'] ?? ''), 'UTF-8');
+        $tpl->tpAmb = mb_strtoupper(Tabelas::tpAmb($prot['tpAmb'] ?? ''), 'UTF-8');
 
         if (!empty($prot['eventos']) && is_array($prot['eventos'])) {
             foreach ($prot['eventos'] as $evento) {

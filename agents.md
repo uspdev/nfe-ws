@@ -48,7 +48,7 @@ nfe-ws/
 │   ├── Nfe.php                 # Tratamento, validação e assinatura do XML da NF-e e geração de DANFE
 │   ├── Sefaz.php               # Comunicação SOAP com a SEFAZ e gerenciamento de cache de protocolos
 │   ├── Protocolo.php           # Extração/parse dos dados do protocolo SEFAZ e geração de PDF do protocolo
-│   ├── Storage.php             # Utilitários de mapeamento de códigos da NF-e e SEFAZ
+│   ├── Tabelas.php             # Tabelas e dicionários de códigos fiscais da NF-e e SEFAZ
 │   ├── Tools.php               # Extensão utilitária de formatação e conversão
 │   └── helpers.php             # Funções globais helper (env, config)
 ├── templates/                  # Templates e arquivos visuais de apresentação
