@@ -28,7 +28,7 @@ class Protocolo
     {
         try {
             $resultado = $this->sefaz->consultarChave($chave);
-            $parsed = self::parse($resultado['raw'], $chave, $resultado['age']);
+            $parsed = self::parse($resultado['raw'], $chave);
 
             return [
                 'prot' => array_merge($parsed, [
@@ -50,23 +50,9 @@ class Protocolo
     }
 
     /**
-     * Mantido para compatibilidade com versoes anteriores
-     */
-    public function consulta(string $chave)
-    {
-        $res = $this->consultaComUrl($chave);
-        if (($res['prot']['status'] ?? '') === 'erro') {
-            return false;
-        }
-        $prot = $res['prot'];
-        $prot['url'] = $res['url'];
-        return $prot;
-    }
-
-    /**
      * Faz o parse do XML retornado pela SEFAZ
      */
-    public static function parse(string $rawXml, string $chave = '', int $age = 0): array
+    public static function parse(string $rawXml, string $chave = ''): array
     {
         $ret = [];
         $cons = new DOMDocument('1.0', 'UTF-8');
@@ -243,7 +229,7 @@ class Protocolo
         }
 
         $tpl->dhConsulta = $prot['dhConsulta'] ?? date('d/m/Y - H:i:s');
-        $tpl->infoSistema = 'Sistema DELOS/NFE ' . (defined('VERSAO') ? VERSAO : '2.0.8');
+        $tpl->infoSistema = 'Sistema DELOS/NFE ' . $config->appVersao;
 
         $html = $tpl->parse();
 
