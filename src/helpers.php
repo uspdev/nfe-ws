@@ -2,22 +2,6 @@
 
 use Uspdev\NfeWs\Config;
 
-// Aliases preguiçosos para compatibilidade com chamadas no namespace global
-spl_autoload_register(function ($class) {
-    $aliases = [
-        'Config'        => \Uspdev\NfeWs\Config::class,
-        'ApiController' => \Uspdev\NfeWs\ApiController::class,
-        'NfeWs'         => \Uspdev\NfeWs\NfeWs::class,
-        'nfe_ws'        => \Uspdev\NfeWs\NfeWs::class,
-        'Protocolo'     => \Uspdev\NfeWs\Protocolo::class,
-        'Storage'       => \Uspdev\NfeWs\Storage::class,
-        'Tools'         => \Uspdev\NfeWs\Tools::class,
-    ];
-    if (isset($aliases[$class])) {
-        class_alias($aliases[$class], $class);
-    }
-});
-
 if (!function_exists('env')) {
     /**
      * Obtém o valor de uma variável de ambiente, similar ao helper do Laravel.

@@ -59,7 +59,16 @@ class HelpersTest extends TestCase
 
     public function testConfigHelper(): void
     {
-        $this->assertInstanceOf(\Config::class, config());
+        $this->assertInstanceOf(Config::class, config());
         $this->assertSame(config()->appVersao, config('app_versao'));
+    }
+
+    public function testNewDomainClassesAreAvailable(): void
+    {
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Nfe::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Sefaz::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Protocolo::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\NfeWs::class));
+        $this->assertTrue(is_subclass_of(\Uspdev\NfeWs\NfeWs::class, \Uspdev\NfeWs\Nfe::class));
     }
 }

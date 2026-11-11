@@ -94,4 +94,30 @@ class Tools
         }
         return $timestampDH;
     }
+
+    /**
+     * Aplica uma mascara onde # e o caractere curinga
+     */
+    public static function format($campo = '', $mascara = '')
+    {
+        if ($campo === '' || $mascara === '') {
+            return $campo;
+        }
+        $sLimpo = preg_replace('/[^0-9A-Za-z]/', '', (string)$campo);
+        $sRetorno = '';
+        $sIdx = 0;
+        $tCampo = strlen($sLimpo);
+        for ($i = 0; $i < strlen($mascara); $i++) {
+            if ($mascara[$i] === '#') {
+                if ($sIdx < $tCampo) {
+                    $sRetorno .= $sLimpo[$sIdx++];
+                }
+            } else {
+                if ($sIdx < $tCampo) {
+                    $sRetorno .= $mascara[$i];
+                }
+            }
+        }
+        return $sRetorno;
+    }
 }
