@@ -105,7 +105,7 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
 * Gerenciada diretamente pela aplicação no middleware de rota (`ApiController::authenticate`).
 * O cliente envia a chave no cabeçalho HTTP `X-API-Key` (ou parâmetro de query string).
 * As chaves são strings aleatórias seguras (64 hex) e armazenadas em `$cfg['pwdFile']` (`local/passwd.json`) como um array estruturado em formato JSON contendo `name`, `hash` (SHA-256), `description`, `created_at` e `revoked_at`.
-* Todas as requisições autenticadas ou com falha de autenticação geram logs dedicados com rotação diária em `local/logs/access-YYYY-MM-DD.log`.
+* Todas as requisições autenticadas ou com falha de autenticação (`AUTH`) e as consultas com a SEFAZ (`SEFAZ`: status online, tempo em ms, hit de cache e falhas SOAP) geram logs dedicados com rotação diária em `local/logs/access-YYYY-MM-DD.log`.
 * Gerenciamento via CLI:
   ```bash
   php key.php add <nome> [descricao]

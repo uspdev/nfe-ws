@@ -10,18 +10,22 @@ class Sefaz
     private Config $config;
     private NfeTools $tools;
 
-    public function __construct(?Config $config = null)
+    public function __construct(?Config $config = null, ?NfeTools $tools = null)
     {
         $this->config = $config ?? Config::getInstance();
 
-        $configJson = json_encode($this->config->nfeConfig);
-        $certificate = $this->config->getCertificate();
+        if ($tools !== null) {
+            $this->tools = $tools;
+        } else {
+            $configJson = json_encode($this->config->nfeConfig);
+            $certificate = $this->config->getCertificate();
 
-        $soap = new SoapCurl($certificate);
-        $soap->httpVersion('1.1');
+            $soap = new SoapCurl($certificate);
+            $soap->httpVersion('1.1');
 
-        $this->tools = new NfeTools($configJson, $certificate);
-        $this->tools->loadSoapClass($soap);
+            $this->tools = new NfeTools($configJson, $certificate);
+            $this->tools->loadSoapClass($soap);
+        }
     }
 
     /**
@@ -43,11 +47,36 @@ class Sefaz
         $age = is_file($arq) ? time() - filemtime($arq) : 0;
 
         if (!is_file($arq) || $age > $maxAge) {
-            $raw = $this->tools->sefazConsultaChave($chNFe);
-            file_put_contents($arq, $raw);
-            $age = 0;
+            $start = microtime(true);
+            try {
+                $raw = $this->tools->sefazConsultaChave($chNFe);
+                $durationMs = round((microtime(true) - $start) * 1000);
+                file_put_contents($arq, $raw);
+                $age = 0;
+
+                preg_match('/<cStat>(\d+)<\/cStat>/', $raw, $mStat);
+                preg_match('/<xMotivo>(.*?)<\/xMotivo>/', $raw, $mMotivo);
+                $cStat = $mStat[1] ?? '-';
+                $xMotivo = $mMotivo[1] ?? '-';
+
+                Logger::log('SEFAZ', [
+                    'status'  => 'ONLINE',
+                    'message' => "chave={$chNFe} cStat={$cStat} tempo={$durationMs}ms - {$xMotivo}",
+                ]);
+            } catch (\Throwable $e) {
+                $durationMs = round((microtime(true) - $start) * 1000);
+                Logger::log('SEFAZ', [
+                    'status'  => 'ERROR',
+                    'message' => "chave={$chNFe} tempo={$durationMs}ms - Falha na comunicação SOAP: " . $e->getMessage(),
+                ]);
+                throw $e;
+            }
         } else {
             $raw = file_get_contents($arq);
+            Logger::log('SEFAZ', [
+                'status'  => 'CACHE',
+                'message' => "chave={$chNFe} age={$age}s",
+            ]);
         }
 
         return [

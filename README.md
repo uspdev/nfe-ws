@@ -90,8 +90,8 @@ A autenticação da API é realizada por **API key** enviada nas requisições a
 X-API-Key: <sua-api-key>
 ```
 
-> **Segurança:** O servidor armazena apenas o hash **SHA-256** das chaves geradas no arquivo configurado em `pwdFile` (`local/passwd.json`).
-> Além disso, todas as tentativas de autenticação e acessos com as chaves são registradas em logs diários em `local/logs/access-YYYY-MM-DD.log`.
+> **Segurança e Auditoria:** O servidor armazena apenas o hash **SHA-256** das chaves geradas no arquivo configurado em `pwdFile` (`local/passwd.json`).
+> Além disso, todas as tentativas de autenticação (`AUTH`) e comunicações com a SEFAZ (`SEFAZ`: online com tempo de resposta, cache ou erro) são registradas em logs diários em `local/logs/access-YYYY-MM-DD.log`.
 
 O gerenciamento de credenciais é feito exclusivamente por linha de comando através do script `key.php`:
 

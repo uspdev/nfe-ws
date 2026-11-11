@@ -71,7 +71,12 @@ class Logger
             $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
             $uri = $_SERVER['REQUEST_URI'] ?? '-';
 
-            $name = $context['name'] ?? $context['user'] ?? '-';
+            $name = $context['name'] ?? $context['user'] ?? null;
+            if ($name === null && class_exists(\Flight::class) && \Flight::has('currentUser')) {
+                $currentUser = \Flight::get('currentUser');
+                $name = is_array($currentUser) ? ($currentUser['name'] ?? null) : null;
+            }
+            $name = $name ?? '-';
             $status = $context['status'] ?? '-';
             $message = $context['message'] ?? '';
 
