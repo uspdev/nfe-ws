@@ -7,7 +7,7 @@ class Cors
     /**
      * Define cabeçalhos CORS e encerra requisições OPTIONS (preflight).
      */
-    public static function handle(): void
+    public static function handle(): bool
     {
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -17,5 +17,7 @@ class Cors
             echo 'OK';
             exit;
         }
+
+        return true;
     }
 }

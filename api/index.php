@@ -10,20 +10,18 @@ use Uspdev\NfeWs\Middleware\Cors;
 // Inicializa a aplicação com a configuração de ambiente e debug
 $app = App::create();
 
-// Trata CORS globalmente para todas as requisições (incluindo preflight OPTIONS)
-Cors::handle();
-
-$controller = new ApiController();
+// Middleware CORS registrado no pipeline de rotas
+$app->route('*', [Cors::class, 'handle']);
 
 // Rota pública de documentação
-$app->route('GET /', [$controller, 'index']);
+$app->route('GET /', [ApiController::class, 'index']);
 
 // Middleware de autenticação: todas as demais rotas exigem X-API-Key (ou ?api_key=)
 $app->route('*', [Auth::class, 'handle']);
 
 // Rotas protegidas da API
-$app->route('GET /status', [$controller, 'status']);
-$app->route('GET /@tipo:[a-z]+/@file', [$controller, 'download']);
-$app->route('POST /xml', [$controller, 'processXml']);
+$app->route('GET /status', [ApiController::class, 'status']);
+$app->route('GET /@tipo:[a-z]+/@file', [ApiController::class, 'download']);
+$app->route('POST /xml', [ApiController::class, 'processXml']);
 
 $app->start();

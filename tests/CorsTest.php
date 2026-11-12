@@ -24,8 +24,6 @@ class CorsTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        // Não deve dar exit
-        Cors::handle();
-        $this->assertTrue(true);
+        $this->assertTrue(Cors::handle());
     }
 }

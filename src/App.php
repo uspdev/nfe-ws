@@ -17,6 +17,10 @@ class App
         $config = $config ?? Config::getInstance();
         $app = new Engine();
 
+        $app->response()->header('Access-Control-Allow-Origin', '*');
+        $app->response()->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $app->response()->header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key, Authorization');
+
         if ($config->debug) {
             error_reporting(E_ALL);
             ini_set('display_errors', 'On');

@@ -83,7 +83,7 @@ nfe-ws/
 
 ## 4. Arquitetura da API e Endpoints
 
-O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o tratamento das requisições para [`ApiController.php`](src/ApiController.php).
+O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o tratamento das requisições para [`ApiController.php`](src/Controllers/ApiController.php).
 
 ### Rotas Disponíveis:
 
