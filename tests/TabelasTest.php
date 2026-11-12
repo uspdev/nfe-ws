@@ -3,7 +3,7 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
-use Uspdev\NfeWs\Tabelas;
+use Uspdev\NfeWs\Services\Tabelas;
 
 class TabelasTest extends TestCase
 {

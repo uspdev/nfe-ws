@@ -51,11 +51,11 @@ nfe-ws/
 │   ├── Services/               # Camada de Serviços e Regras de Negócio
 │   │   ├── Nfe.php             # Tratamento, validação e assinatura do XML da NF-e e DANFE
 │   │   ├── Sefaz.php           # Comunicação SOAP com a SEFAZ e cache local
-│   │   └── Protocolo.php       # Parsing do protocolo SEFAZ e geração de PDF do relatório
+│   │   ├── Protocolo.php       # Parsing do protocolo SEFAZ e geração de PDF do relatório
+│   │   └── Tabelas.php         # Tabelas e dicionários de códigos fiscais da NF-e e SEFAZ
 │   ├── App.php                 # Application Factory: inicialização e configuração do Flight Engine
 │   ├── Config.php              # Carregamento e abstração das configurações via .env
 │   ├── Logger.php              # Registro de logs de auditoria e acesso diários
-│   ├── Tabelas.php             # Tabelas e dicionários de códigos fiscais da NF-e e SEFAZ
 │   ├── Tools.php               # Extensão utilitária de formatação e conversão
 │   └── helpers.php             # Funções globais helper (env, config)
 ├── templates/                  # Templates e arquivos visuais de apresentação

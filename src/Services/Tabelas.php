@@ -1,6 +1,6 @@
 <?php
 
-namespace Uspdev\NfeWs;
+namespace Uspdev\NfeWs\Services;
 
 /**
  * Tabelas e dicionários de códigos do ecossistema NF-e / SEFAZ.

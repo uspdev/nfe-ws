@@ -7,7 +7,6 @@ use TCPDF;
 use raelgc\view\Template;
 use NFePHP\NFe\Common\Standardize;
 use Uspdev\NfeWs\Config;
-use Uspdev\NfeWs\Tabelas;
 use Uspdev\NfeWs\Tools;
 
 class Protocolo
