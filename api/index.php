@@ -1,25 +1,17 @@
 <?php
 
-use flight\Engine;
-use Uspdev\NfeWs\ApiController;
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$app = new Engine();
+use Uspdev\NfeWs\App;
+use Uspdev\NfeWs\Controllers\ApiController;
+use Uspdev\NfeWs\Middleware\Auth;
+use Uspdev\NfeWs\Middleware\Cors;
 
-$debug = (bool) config('debug');
+// Inicializa a aplicação com a configuração de ambiente e debug
+$app = App::create();
 
-if ($debug) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 'On');
-    $app->set('flight.debug', true);
-    $app->set('flight.log_errors', true);
-} else {
-    error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-    ini_set('display_errors', 'Off');
-    ini_set('log_errors', 'On');
-    $app->set('flight.debug', false);
-}
+// Trata CORS globalmente para todas as requisições (incluindo preflight OPTIONS)
+Cors::handle();
 
 $controller = new ApiController();
 
@@ -27,7 +19,7 @@ $controller = new ApiController();
 $app->route('GET /', [$controller, 'index']);
 
 // Middleware de autenticação: todas as demais rotas exigem X-API-Key (ou ?api_key=)
-$app->route('*', [$controller, 'authenticate']);
+$app->route('*', [Auth::class, 'handle']);
 
 // Rotas protegidas da API
 $app->route('GET /status', [$controller, 'status']);

@@ -6,7 +6,7 @@ use NFePHP\NFe\Tools as NfeTools;
 use PHPUnit\Framework\TestCase;
 use Uspdev\NfeWs\Config;
 use Uspdev\NfeWs\Logger;
-use Uspdev\NfeWs\Sefaz;
+use Uspdev\NfeWs\Services\Sefaz;
 
 class SefazTest extends TestCase
 {

@@ -3,19 +3,21 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
-use Uspdev\NfeWs\Auth;
-use Uspdev\NfeWs\AuthException;
 use Uspdev\NfeWs\Config;
+use Uspdev\NfeWs\Middleware\Auth;
+use Uspdev\NfeWs\Middleware\AuthException;
 
 class AuthTest extends TestCase
 {
     private string $tempPwdFile;
     private Config $config;
+    private string $originalPwdFile;
 
     protected function setUp(): void
     {
         $this->tempPwdFile = sys_get_temp_dir() . '/test_pwd_' . uniqid() . '.json';
         $this->config = new Config();
+        $this->originalPwdFile = $this->config->pwdFile;
         $this->config->pwdFile = $this->tempPwdFile;
 
         unset($_SERVER['HTTP_X_API_KEY'], $_SERVER['X_API_KEY'], $_GET['api_key'], $_GET['key']);
@@ -26,6 +28,9 @@ class AuthTest extends TestCase
         if (file_exists($this->tempPwdFile)) {
             @unlink($this->tempPwdFile);
         }
+
+        $this->config->pwdFile = $this->originalPwdFile;
+        Config::resetInstance();
 
         unset($_SERVER['HTTP_X_API_KEY'], $_SERVER['X_API_KEY'], $_GET['api_key'], $_GET['key']);
     }
@@ -138,5 +143,24 @@ class AuthTest extends TestCase
         $this->assertIsArray($user);
         $this->assertSame('valid-client', $user['name']);
         $this->assertSame('Sistema ERP', $user['description']);
+    }
+
+    public function testHandlePassesWhenValidApiKeyAndValidDir(): void
+    {
+        $keys = [
+            [
+                'name' => 'valid-client',
+                'hash' => hash('sha256', 'super-secret'),
+                'created_at' => date('c'),
+                'revoked_at' => null,
+            ],
+        ];
+        file_put_contents($this->tempPwdFile, json_encode($keys));
+
+        $_SERVER['HTTP_X_API_KEY'] = 'super-secret';
+        $auth = new Auth($this->config);
+
+        $this->assertTrue($auth->handle());
+        $this->assertTrue(Auth::handle());
     }
 }

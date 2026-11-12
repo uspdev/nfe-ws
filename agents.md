@@ -40,14 +40,21 @@ nfe-ws/
 │   ├── sample.htaccess         # Template de configuração do .htaccess
 │   └── index.php               # Ponto de entrada (Front Controller) e definição de rotas
 ├── src/                        # Classes PSR-4 (namespace Uspdev\NfeWs)
-│   ├── ApiController.php       # Controlador das rotas da API e autenticação
-│   ├── Auth.php                # Autenticação de API keys e controle de CORS
-│   ├── AuthException.php       # Exceção personalizada de autenticação
+│   ├── Controllers/            # Camada de Controladores HTTP
+│   │   └── ApiController.php   # Controlador das rotas da API e download de arquivos
+│   ├── Middleware/             # Camada de Middlewares
+│   │   ├── Auth.php            # Middleware de rota: interceptação, autenticação e auditoria
+│   │   ├── AuthException.php   # Exceção personalizada de autenticação
+│   │   └── Cors.php            # Controle de cabeçalhos CORS e requisições OPTIONS preflight
+│   ├── Models/                 # Camada de Dados e Modelos
+│   │   └── ApiKey.php          # Model e repositório: integridade, validação e persistência do passwd.json
+│   ├── Services/               # Camada de Serviços e Regras de Negócio
+│   │   ├── Nfe.php             # Tratamento, validação e assinatura do XML da NF-e e DANFE
+│   │   ├── Sefaz.php           # Comunicação SOAP com a SEFAZ e cache local
+│   │   └── Protocolo.php       # Parsing do protocolo SEFAZ e geração de PDF do relatório
+│   ├── App.php                 # Application Factory: inicialização e configuração do Flight Engine
 │   ├── Config.php              # Carregamento e abstração das configurações via .env
 │   ├── Logger.php              # Registro de logs de auditoria e acesso diários
-│   ├── Nfe.php                 # Tratamento, validação e assinatura do XML da NF-e e geração de DANFE
-│   ├── Sefaz.php               # Comunicação SOAP com a SEFAZ e gerenciamento de cache de protocolos
-│   ├── Protocolo.php           # Extração/parse dos dados do protocolo SEFAZ e geração de PDF do protocolo
 │   ├── Tabelas.php             # Tabelas e dicionários de códigos fiscais da NF-e e SEFAZ
 │   ├── Tools.php               # Extensão utilitária de formatação e conversão
 │   └── helpers.php             # Funções globais helper (env, config)
@@ -138,8 +145,8 @@ O arquivo [`api/index.php`](api/index.php) atua como Front Controller e delega o
   ```
 * **Verificação de sintaxe:**
   ```bash
-  php -l src/ApiController.php
-  php -l src/Nfe.php
+  php -l src/Controllers/ApiController.php
+  php -l src/Services/Nfe.php
   ```
 
 ---

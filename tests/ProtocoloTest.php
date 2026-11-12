@@ -3,7 +3,7 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
-use Uspdev\NfeWs\Protocolo;
+use Uspdev\NfeWs\Services\Protocolo;
 
 class ProtocoloTest extends TestCase
 {

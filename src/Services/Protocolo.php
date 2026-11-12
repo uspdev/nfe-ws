@@ -1,11 +1,14 @@
 <?php
 
-namespace Uspdev\NfeWs;
+namespace Uspdev\NfeWs\Services;
 
 use DOMDocument;
 use TCPDF;
 use raelgc\view\Template;
 use NFePHP\NFe\Common\Standardize;
+use Uspdev\NfeWs\Config;
+use Uspdev\NfeWs\Tabelas;
+use Uspdev\NfeWs\Tools;
 
 class Protocolo
 {
@@ -151,7 +154,7 @@ class Protocolo
             return false;
         }
 
-        $tpl = new Template(__DIR__ . '/../templates/protocolo.tpl');
+        $tpl = new Template(__DIR__ . '/../../templates/protocolo.tpl');
 
         $tpl->chNFe = Tools::format($chave, '##-####-##.###.###/####-##-##-###-###.###.###-###.###.###-#');
         $tpl->nNF = $nfe->ide->getElementsByTagName('nNF')->item(0)->nodeValue ?? '';
@@ -263,7 +266,7 @@ class Protocolo
         $rodape = 'DELOS/NFE ' . $tpl->dhConsulta;
         $pdf->writeHTMLCell(0, 0, '', '', $rodape, 'T', 0, 0, true, 'C');
 
-        $logoPath = __DIR__ . '/../templates/images/logo_usp.png';
+        $logoPath = __DIR__ . '/../../templates/images/logo_usp.png';
         if (is_file($logoPath)) {
             $pdf->Image($logoPath, 210 - 45, 297 - 14, 25);
         }

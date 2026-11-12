@@ -1,12 +1,14 @@
 <?php
 
-namespace Uspdev\NfeWs;
+namespace Uspdev\NfeWs\Services;
 
 use DOMDocument;
 use Exception;
 use NFePHP\Common\Signer;
 use NFePHP\NFe\Complements;
 use NFePHP\DA\NFe\Danfe;
+use Uspdev\NfeWs\Config;
+use Uspdev\NfeWs\Tools;
 
 #[\AllowDynamicProperties]
 class Nfe

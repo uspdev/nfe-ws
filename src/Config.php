@@ -66,6 +66,14 @@ class Config
     }
 
     /**
+     * Reseta a instancia unica para isolamento em testes unitarios
+     */
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
      * Copia as propriedades da instancia ativa
      */
     private function copyFrom(self $source): void

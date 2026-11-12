@@ -65,8 +65,13 @@ class HelpersTest extends TestCase
 
     public function testNewDomainClassesAreAvailable(): void
     {
-        $this->assertTrue(class_exists(\Uspdev\NfeWs\Nfe::class));
-        $this->assertTrue(class_exists(\Uspdev\NfeWs\Sefaz::class));
-        $this->assertTrue(class_exists(\Uspdev\NfeWs\Protocolo::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Services\Nfe::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Services\Sefaz::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Services\Protocolo::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Controllers\ApiController::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Middleware\Auth::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Middleware\Cors::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\Models\ApiKey::class));
+        $this->assertTrue(class_exists(\Uspdev\NfeWs\App::class));
     }
 }

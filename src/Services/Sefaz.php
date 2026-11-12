@@ -1,9 +1,12 @@
 <?php
 
-namespace Uspdev\NfeWs;
+namespace Uspdev\NfeWs\Services;
 
+use InvalidArgumentException;
 use NFePHP\Common\Soap\SoapCurl;
 use NFePHP\NFe\Tools as NfeTools;
+use Uspdev\NfeWs\Config;
+use Uspdev\NfeWs\Logger;
 
 class Sefaz
 {
@@ -39,7 +42,7 @@ class Sefaz
     {
         $chNFe = Nfe::validaChNFe($chave);
         if (!$chNFe) {
-            throw new \InvalidArgumentException('Chave de NF-e inválida: ' . $chave);
+            throw new InvalidArgumentException('Chave de NF-e inválida: ' . $chave);
         }
 
         $maxAge = $maxAge ?? $this->config->cacheSefazTtl;

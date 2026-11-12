@@ -1,6 +1,9 @@
 <?php
 
-namespace Uspdev\NfeWs;
+namespace Uspdev\NfeWs\Controllers;
+
+use Uspdev\NfeWs\Config;
+use Uspdev\NfeWs\Services\Nfe;
 
 class ApiController
 {
@@ -16,33 +19,7 @@ class ApiController
      */
     public function index(): void
     {
-        readfile(__DIR__ . '/../templates/index.tpl');
-    }
-
-    /**
-     * Rota *: Middleware de autenticacao e validacoes basicas
-     */
-    public function authenticate()
-    {
-        Auth::handleCors();
-
-        try {
-            $apiKey = Auth::extractApiKey();
-            $auth = new Auth($this->config);
-            $auth->authenticate($apiKey);
-        } catch (AuthException $e) {
-            http_response_code($e->getCode());
-            echo $e->getMessage();
-            exit();
-        }
-
-        if (!is_dir($this->config->local)) {
-            http_response_code(500);
-            echo 'A pasta de dados não está configurada!';
-            exit();
-        }
-
-        return true;
+        readfile(__DIR__ . '/../../templates/index.tpl');
     }
 
     /**
@@ -81,9 +58,6 @@ class ApiController
      */
     public function download(string $tipo, string $file): void
     {
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, OPTIONS');
-
         $types = [
             'danfe' => 'application/pdf',
             'prot'  => 'application/xml',
