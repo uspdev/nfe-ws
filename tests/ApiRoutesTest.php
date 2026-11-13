@@ -209,6 +209,9 @@ class ApiRoutesTest extends TestCase
         $this->assertArrayHasKey('valid_to', $json);
         $this->assertArrayHasKey('expirado', $json);
         $this->assertArrayHasKey('mensagem', $json);
+        $this->assertTrue($json['modo_compatibilidade']);
+        $this->assertSame('modo de compatibilidade', $json['versao_em_uso']);
+        $this->assertSame('v1', $json['versao_corrente']);
     }
 
     /**
@@ -238,29 +241,29 @@ class ApiRoutesTest extends TestCase
      */
     public function testDownloadWithoutApiKeyReturns401(): void
     {
-        $res = $this->makeRequest('GET', '/danfe/arquivo_inexistente_123.pdf');
+        $res = $this->makeRequest('GET', '/v1/danfe/arquivo_inexistente_123.pdf');
 
         $this->assertSame(401, $res['status']);
         $this->assertStringContainsString('Você deve informar uma API key válida', $res['body']);
     }
 
     /**
-     * Testa GET /danfe/inexistente.pdf com API key autenticada retornando 404
+     * Testa GET /v1/danfe/inexistente.pdf com API key autenticada retornando 404
      */
     public function testDownloadFileNotFoundReturns404(): void
     {
-        $res = $this->makeRequest('GET', '/danfe/arquivo_inexistente_123.pdf', null, self::$testApiKey);
+        $res = $this->makeRequest('GET', '/v1/danfe/arquivo_inexistente_123.pdf', null, self::$testApiKey);
 
         $this->assertSame(404, $res['status']);
         $this->assertStringContainsString('Arquivo nao encontrado!', $res['body']);
     }
 
     /**
-     * Testa GET /tipo_invalido/arquivo.pdf com API key retornando erro
+     * Testa GET /v1/invalido/arquivo.pdf com API key retornando erro
      */
     public function testDownloadInvalidTypeReturnsError(): void
     {
-        $res = $this->makeRequest('GET', '/invalido/arquivo.pdf', null, self::$testApiKey);
+        $res = $this->makeRequest('GET', '/v1/invalido/arquivo.pdf', null, self::$testApiKey);
 
         $this->assertSame(200, $res['status']);
         $this->assertSame('erro', $res['body']);
@@ -278,11 +281,11 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa POST /xml sem enviar xml ou chave
+     * Testa POST /v1/xml sem enviar xml ou chave
      */
     public function testPostXmlWithoutDataReturnsErrorJson(): void
     {
-        $res = $this->makeRequest('POST', '/xml', [], self::$testApiKey);
+        $res = $this->makeRequest('POST', '/v1/xml', [], self::$testApiKey);
 
         $this->assertSame(200, $res['status']);
         $json = json_decode($res['body'], true);
@@ -291,11 +294,11 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa POST /xml com chave invalida (tamanho incorreto)
+     * Testa POST /v1/xml com chave invalida (tamanho incorreto)
      */
     public function testPostXmlWithInvalidChaveReturnsErrorJson(): void
     {
-        $res = $this->makeRequest('POST', '/xml', ['chave' => '12345'], self::$testApiKey);
+        $res = $this->makeRequest('POST', '/v1/xml', ['chave' => '12345'], self::$testApiKey);
 
         $this->assertSame(200, $res['status']);
         $json = json_decode($res['body'], true);
@@ -304,12 +307,12 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa POST /xml com XML contendo estrutura invalida
+     * Testa POST /v1/xml com XML contendo estrutura invalida
      */
     public function testPostXmlWithInvalidXmlStructure(): void
     {
         $invalidXml = '<invalido><tag>teste</tag></invalido>';
-        $res = $this->makeRequest('POST', '/xml', ['xml' => $invalidXml], self::$testApiKey);
+        $res = $this->makeRequest('POST', '/v1/xml', ['xml' => $invalidXml], self::$testApiKey);
 
         $this->assertSame(200, $res['status']);
         $json = json_decode($res['body'], true);
@@ -318,16 +321,65 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa POST /xml com payload em formato JSON (Content-Type: application/json)
+     * Testa POST /v1/xml com payload em formato JSON (Content-Type: application/json)
      */
     public function testPostXmlWithJsonPayload(): void
     {
         $payload = json_encode(['chave' => '12345']);
-        $res = $this->makeRequest('POST', '/xml', $payload, self::$testApiKey, ['Content-Type: application/json']);
+        $res = $this->makeRequest('POST', '/v1/xml', $payload, self::$testApiKey, ['Content-Type: application/json']);
 
         $this->assertSame(200, $res['status']);
         $json = json_decode($res['body'], true);
         $this->assertIsArray($json);
         $this->assertStringContainsString('Chave incorreta', $json['status']);
+    }
+
+    /**
+     * Testa GET /v1/status sem API key retorna 401
+     */
+    public function testV1StatusWithoutApiKeyReturns401(): void
+    {
+        $res = $this->makeRequest('GET', '/v1/status');
+
+        $this->assertSame(401, $res['status']);
+    }
+
+    /**
+     * Testa GET /v1/status autenticado retorna JSON de status
+     */
+    public function testV1StatusWithApiKeyReturnsJson(): void
+    {
+        $res = $this->makeRequest('GET', '/v1/status', null, self::$testApiKey);
+
+        $this->assertSame(200, $res['status']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertArrayHasKey('status', $json);
+        $this->assertSame('v1', $json['versao_em_uso']);
+        $this->assertSame('v1', $json['versao_corrente']);
+    }
+
+    /**
+     * Testa GET /v1/danfe/nao_existe.pdf retorna 404
+     */
+    public function testV1DownloadMissingFileReturns404(): void
+    {
+        $res = $this->makeRequest('GET', '/v1/danfe/nao_existe.pdf', null, self::$testApiKey);
+
+        $this->assertSame(404, $res['status']);
+        $this->assertSame('Arquivo nao encontrado!', $res['body']);
+    }
+
+    /**
+     * Testa POST /v1/xml sem dados retorna JSON de erro
+     */
+    public function testV1PostXmlWithoutDataReturnsErrorJson(): void
+    {
+        $res = $this->makeRequest('POST', '/v1/xml', [], self::$testApiKey);
+
+        $this->assertSame(200, $res['status']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertSame('Erro: sem dados', $json['status']);
     }
 }

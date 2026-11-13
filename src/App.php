@@ -9,6 +9,8 @@ use flight\Engine;
  */
 class App
 {
+    public const API_VERSION = 'v1';
+
     /**
      * Cria e inicializa a Engine do Flight com as configurações de ambiente e debug
      */

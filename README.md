@@ -140,17 +140,18 @@ Alias /nfe-ws/api /caminho/para/nfe-ws/api
 
 ## Endpoints da API
 
-Todas as rotas da API (exceto a página inicial `GET /`) exigem autenticação via header HTTP `X-API-Key` (ou o parâmetro `?api_key=` na query string). Para acesso aos arquivos gerados (`/danfe`, `/sefaz`, `/xml`, `/prot`) em navegadores de usuários finais, recomenda-se que o sistema consumidor faça o proxy dos arquivos utilizando o método `obterArquivo()` da biblioteca cliente.
+Todas as rotas da API (exceto a página inicial `GET /`) exigem autenticação via header HTTP `X-API-Key` (ou o parâmetro `?api_key=` na query string). Os endpoints principais são versionados sob `/v1` (ex.: `/v1/status`, `/v1/xml`), mantendo `/status` sem prefixo apenas para compatibilidade retroativa. Para acesso aos arquivos gerados (`/v1/danfe`, `/v1/sefaz`, `/v1/xml`, `/v1/prot`) em navegadores de usuários finais, recomenda-se que o sistema consumidor faça o proxy dos arquivos utilizando o método `obterArquivo()` da biblioteca cliente.
 
 | Método | Rota | Autenticação | Descrição |
 |---|---|---|---|
 | `GET` | `/` | Pública | Página inicial com documentação resumida. |
-| `GET` | `/status` | Requerida | Retorna a validade e dados do certificado digital instalado em formato JSON. |
-| `POST` | `/xml` | Requerida | Envia o XML da nota fiscal (`xml`) ou a chave (`chave`) via POST form ou JSON body para validação, consulta na SEFAZ e geração dos PDFs (DANFE e protocolo). |
-| `GET` | `/danfe/<arquivo>` | Requerida | Download do DANFE em PDF gerado. |
-| `GET` | `/sefaz/<arquivo>` | Requerida | Download do relatório de protocolo da SEFAZ em PDF. |
-| `GET` | `/xml/<arquivo>` | Requerida | Download do XML da nota fiscal armazenado. |
-| `GET` | `/prot/<arquivo>` | Requerida | Download do XML de protocolo da SEFAZ. |
+| `GET` | `/v1/status` | Requerida | Retorna a validade e dados do certificado digital instalado em formato JSON, incluindo `versao_em_uso` e `versao_corrente`. |
+| `GET` | `/status` | Requerida | Rota legada de compatibilidade retroativa para status (`versao_em_uso` em `modo de compatibilidade`). |
+| `POST` | `/v1/xml` | Requerida | Envia o XML da nota fiscal (`xml`) ou a chave (`chave`) via POST form ou JSON body para validação, consulta na SEFAZ e geração dos PDFs (DANFE e protocolo). |
+| `GET` | `/v1/danfe/<arquivo>` | Requerida | Download do DANFE em PDF gerado. |
+| `GET` | `/v1/sefaz/<arquivo>` | Requerida | Download do relatório de protocolo da SEFAZ em PDF. |
+| `GET` | `/v1/xml/<arquivo>` | Requerida | Download do XML da nota fiscal armazenado. |
+| `GET` | `/v1/prot/<arquivo>` | Requerida | Download do XML de protocolo da SEFAZ. |
 
 ---
 

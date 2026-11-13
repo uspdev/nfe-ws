@@ -97,7 +97,7 @@
     <h1>API de serviços para NFE</h1>
     <p>Webservice REST para recepção, validação, consulta junto à SEFAZ e geração de DANFE e protocolo de Notas Fiscais Eletrônicas.</p>
 
-    <h2>Endpoints da API</h2>
+    <h2>Endpoints Gerais / Compatibilidade</h2>
     <table>
         <thead>
             <tr>
@@ -118,35 +118,55 @@
                 <td><span class="badge badge-get">GET</span></td>
                 <td><code>/status</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
-                <td>Consulta a validade e status do certificado digital instalado.</td>
+                <td>Rota de compatibilidade retroativa para consulta de status (retorna <code>versao_em_uso</code> como <code>modo de compatibilidade</code>).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Endpoints da API v1 (<code>/v1</code>)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 80px;">Método</th>
+                <th>Rota</th>
+                <th style="width: 100px;">Acesso</th>
+                <th>Descrição</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-get">GET</span></td>
+                <td><code>/v1/status</code></td>
+                <td><span class="badge badge-auth">API Key</span></td>
+                <td>Consulta a validade e status do certificado digital instalado, além da versão em uso (<code>v1</code>) e a versão mais atual da API.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-post">POST</span></td>
-                <td><code>/xml</code></td>
+                <td><code>/v1/xml</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
                 <td>Envia o XML da NF-e para validação, consulta na SEFAZ e geração dos links para DANFE, protocolo e SEFAZ em PDF/XML.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
-                <td><code>/danfe/{arquivo}.pdf</code></td>
+                <td><code>/v1/danfe/{arquivo}.pdf</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
                 <td>Download ou visualização do DANFE em formato PDF.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
-                <td><code>/sefaz/{arquivo}.pdf</code></td>
+                <td><code>/v1/sefaz/{arquivo}.pdf</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
                 <td>Download do relatório de consulta e protocolo da SEFAZ em formato PDF.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
-                <td><code>/prot/{arquivo}.xml</code></td>
+                <td><code>/v1/prot/{arquivo}.xml</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
                 <td>Download do XML de protocolo retornado pela SEFAZ.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
-                <td><code>/xml/{arquivo}.xml</code></td>
+                <td><code>/v1/xml/{arquivo}.xml</code></td>
                 <td><span class="badge badge-auth">API Key</span></td>
                 <td>Download do arquivo XML da NF-e armazenado no servidor.</td>
             </tr>
