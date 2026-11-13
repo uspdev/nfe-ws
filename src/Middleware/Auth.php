@@ -31,6 +31,30 @@ class Auth
     }
 
     /**
+     * Tenta autenticar a requisição quando uma API Key é informada.
+     * Retorna false sem encerrar a requisição se nenhuma chave foi enviada;
+     * encerra com 401 se uma chave inválida ou revogada foi informada.
+     */
+    public static function tryAuthenticate(): bool
+    {
+        $apiKey = self::extractApiKey();
+        if (trim($apiKey) === '') {
+            return false;
+        }
+
+        $instance = self::$activeInstance ?? new self();
+        try {
+            $instance->authenticate($apiKey);
+        } catch (AuthException $e) {
+            http_response_code($e->getCode());
+            echo $e->getMessage();
+            exit();
+        }
+
+        return true;
+    }
+
+    /**
      * Executa a interceptação, autenticação e validação do ambiente
      */
     public function execute(): bool

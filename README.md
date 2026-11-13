@@ -145,8 +145,8 @@ Todas as rotas da API (exceto a página inicial `GET /`) exigem autenticação v
 | Método | Rota | Autenticação | Descrição |
 |---|---|---|---|
 | `GET` | `/` | Pública | Página inicial com documentação resumida. |
-| `GET` | `/v1/status` | Requerida | Retorna a validade e dados do certificado digital instalado em formato JSON, incluindo `versao_em_uso` e `versao_corrente`. |
-| `GET` | `/status` | Requerida | Rota legada de compatibilidade retroativa para status (`versao_em_uso` em `modo de compatibilidade`). |
+| `GET` | `/v1/status` | Opcional | Retorna `versao_em_uso` e `versao_corrente` sem autenticação; com API Key, inclui os dados do certificado digital. |
+| `GET` | `/status` | Opcional | Rota legada de compatibilidade retroativa (`versao_em_uso` em `modo de compatibilidade`); dados do certificado exigem API Key. |
 | `POST` | `/v1/xml` | Requerida | Envia o XML da nota fiscal (`xml`) ou a chave (`chave`) via POST form ou JSON body para validação, consulta na SEFAZ e geração dos PDFs (DANFE e protocolo). |
 | `GET` | `/v1/danfe/<arquivo>` | Requerida | Download do DANFE em PDF gerado. |
 | `GET` | `/v1/sefaz/<arquivo>` | Requerida | Download do relatório de protocolo da SEFAZ em PDF. |

@@ -117,8 +117,8 @@
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
                 <td><code>/status</code></td>
-                <td><span class="badge badge-auth">API Key</span></td>
-                <td>Rota de compatibilidade retroativa para consulta de status (retorna <code>versao_em_uso</code> como <code>modo de compatibilidade</code>).</td>
+                <td><span class="badge badge-public">Pública</span> <span class="badge badge-auth">API Key*</span></td>
+                <td>Rota de compatibilidade retroativa para consulta de status (retorna <code>versao_em_uso</code> como <code>modo de compatibilidade</code>). Dados do certificado somente com API Key.</td>
             </tr>
         </tbody>
     </table>
@@ -137,8 +137,8 @@
             <tr>
                 <td><span class="badge badge-get">GET</span></td>
                 <td><code>/v1/status</code></td>
-                <td><span class="badge badge-auth">API Key</span></td>
-                <td>Consulta a validade e status do certificado digital instalado, além da versão em uso (<code>v1</code>) e a versão mais atual da API.</td>
+                <td><span class="badge badge-public">Pública</span> <span class="badge badge-auth">API Key*</span></td>
+                <td>Consulta a versão em uso (<code>v1</code>) e a versão mais atual da API; com API Key, retorna também a validade e status do certificado digital.</td>
             </tr>
             <tr>
                 <td><span class="badge badge-post">POST</span></td>

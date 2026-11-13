@@ -163,10 +163,30 @@ class ApiRoutesTest extends TestCase
      */
     public function testProtectedEndpointWithoutAuthReturns401(): void
     {
-        $res = $this->makeRequest('GET', '/status');
+        $res = $this->makeRequest('POST', '/v1/xml');
 
         $this->assertSame(401, $res['status']);
         $this->assertStringContainsString('Você deve informar uma API key válida', $res['body']);
+    }
+
+    /**
+     * Testa GET /status sem API key retorna apenas dados da API (sem dados do certificado)
+     */
+    public function testGetStatusWithoutAuthReturnsApiInfoOnly(): void
+    {
+        $res = $this->makeRequest('GET', '/status');
+
+        $this->assertSame(200, $res['status']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertSame('ok', $json['status']);
+        $this->assertFalse($json['autenticado']);
+        $this->assertTrue($json['modo_compatibilidade']);
+        $this->assertSame('modo de compatibilidade', $json['versao_em_uso']);
+        $this->assertSame('v1', $json['versao_corrente']);
+        $this->assertArrayNotHasKey('cnpj', $json);
+        $this->assertArrayNotHasKey('empresa', $json);
+        $this->assertArrayNotHasKey('validade', $json);
     }
 
     /**
@@ -335,13 +355,22 @@ class ApiRoutesTest extends TestCase
     }
 
     /**
-     * Testa GET /v1/status sem API key retorna 401
+     * Testa GET /v1/status sem API key retorna apenas dados da API (sem certificado)
      */
-    public function testV1StatusWithoutApiKeyReturns401(): void
+    public function testV1StatusWithoutApiKeyReturnsApiInfoOnly(): void
     {
         $res = $this->makeRequest('GET', '/v1/status');
 
-        $this->assertSame(401, $res['status']);
+        $this->assertSame(200, $res['status']);
+        $json = json_decode($res['body'], true);
+        $this->assertIsArray($json);
+        $this->assertSame('ok', $json['status']);
+        $this->assertFalse($json['autenticado']);
+        $this->assertSame('v1', $json['versao_em_uso']);
+        $this->assertSame('v1', $json['versao_corrente']);
+        $this->assertArrayNotHasKey('cnpj', $json);
+        $this->assertArrayNotHasKey('empresa', $json);
+        $this->assertArrayNotHasKey('validade', $json);
     }
 
     /**
