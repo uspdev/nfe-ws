@@ -26,7 +26,7 @@ abstract class BaseApiController
             $this->jsonResponse(array_merge([
                 'status'      => 'ok',
                 'autenticado' => false,
-                'mensagem'    => 'Autentique-se com API Key para visualizar os dados do certificado.',
+                'mensagem'    => 'Não autenticado.',
             ], $versionInfo));
         }
 
